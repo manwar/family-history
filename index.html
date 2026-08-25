@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family History Tree</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <!-- D3.js Library -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Family History Tree</h1>
+    <p>Use pinch/scroll to zoom and drag to navigate</p>
+  </header>
+
+  <main id="tree-container"></main>
+
+  <script src="app.js"></script>
+  <script>
+    // Register Service Worker for PWA capabilities
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker Registered'))
+        .catch(err => console.error('Service Worker Registration Failed:', err));
+    }
+  </script>
+</body>
+</html>

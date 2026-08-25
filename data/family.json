@@ -1,0 +1,34 @@
+{
+  "name": "John Doe",
+  "born": "1890",
+  "died": "1965",
+  "photo": "assets/photos/placeholder.jpg",
+  "children": [
+    {
+      "name": "Jane Doe",
+      "born": "1920",
+      "died": "1995",
+      "photo": "assets/photos/placeholder.jpg",
+      "children": [
+        {
+          "name": "Alice Smith",
+          "born": "1950",
+          "died": "Present",
+          "photo": "assets/photos/placeholder.jpg"
+        },
+        {
+          "name": "Bob Smith",
+          "born": "1953",
+          "died": "Present",
+          "photo": "assets/photos/placeholder.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Robert Doe",
+      "born": "1925",
+      "died": "2002",
+      "photo": "assets/photos/placeholder.jpg"
+    }
+  ]
+}
