@@ -56,6 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
     svg.transition().duration(500).call(zoom.transform, initialTransform);
   });
 
+  // --- EXPORT EVENT LISTENERS ---
+  document.getElementById("export-svg")?.addEventListener("click", exportSVG);
+  document.getElementById("export-png")?.addEventListener("click", exportPNG);
+
   // --- DRAWER CLOSE BUTTON ---
   document.getElementById("close-drawer")?.addEventListener("click", () => closeDrawer());
 
@@ -322,41 +326,48 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // --- EXPORT FUNCTIONS ---
-document.getElementById("export-svg")?.addEventListener("click", exportSVG);
-document.getElementById("export-png")?.addEventListener("click", exportPNG);
-
 function getSvgWithStyles() {
-  const svgEl = document.querySelector("#tree-container svg").cloneNode(true);
+  const container = document.getElementById("tree-container");
+  const svgEl = container ? container.querySelector("svg") : null;
+  if (!svgEl) return null;
 
-  // Embed complete explicit CSS into the SVG header for standalone viewing
+  const svgClone = svgEl.cloneNode(true);
+
+  // Embed full CSS directly into the SVG clone
   const styleEl = document.createElement("style");
   styleEl.textContent = `
-    .node rect.card-rect { fill: #ffffff !important; stroke: #2c3e50; stroke-width: 2px; }
-    .node circle.photo-circle { fill: #34495e; stroke: #3498db; stroke-width: 2px; }
-    .node text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .node text.name { font-weight: bold; font-size: 13px; fill: #2c3e50 !important; }
-    .node text.dates { font-size: 11px; fill: #7f8c8d !important; }
+    .node rect.card-rect { fill: #ffffff !important; stroke: #2c3e50 !important; stroke-width: 2px !important; }
+    .node circle.photo-circle { fill: #34495e !important; stroke: #3498db !important; stroke-width: 2px !important; }
+    .node text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; }
+    .node text.name { font-weight: bold !important; font-size: 13px !important; fill: #2c3e50 !important; }
+    .node text.dates { font-size: 11px !important; fill: #7f8c8d !important; }
     .node text.avatar-placeholder { fill: #ffffff !important; }
     .node text.toggle-icon { fill: #7f8c8d !important; }
     path.link { fill: none !important; stroke: #bdc3c7 !important; stroke-width: 2px !important; }
   `;
-  svgEl.insertBefore(styleEl, svgEl.firstChild);
+  svgClone.insertBefore(styleEl, svgClone.firstChild);
 
-  // Set explicit dimensions and SVG namespaces
-  const width = container.clientWidth;
-  const height = container.clientHeight;
-  svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  svgEl.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-  svgEl.setAttribute("width", width);
-  svgEl.setAttribute("height", height);
-  svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  const width = container.clientWidth || 1000;
+  const height = container.clientHeight || 800;
 
-  return new XMLSerializer().serializeToString(svgEl);
+  svgClone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  svgClone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  svgClone.setAttribute("width", width);
+  svgClone.setAttribute("height", height);
+  svgClone.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  return {
+    xml: new XMLSerializer().serializeToString(svgClone),
+    width,
+    height
+  };
 }
 
 function exportSVG() {
   const svgData = getSvgWithStyles();
-  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  if (!svgData) return;
+
+  const svgBlob = new Blob([svgData.xml], { type: "image/svg+xml;charset=utf-8" });
   const svgUrl = URL.createObjectURL(svgBlob);
 
   const downloadLink = document.createElement("a");
@@ -370,24 +381,22 @@ function exportSVG() {
 
 function exportPNG() {
   const svgData = getSvgWithStyles();
-
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+  if (!svgData) return;
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const img = new Image();
 
-  canvas.width = width * 2;
-  canvas.height = height * 2;
+  canvas.width = svgData.width * 2;
+  canvas.height = svgData.height * 2;
 
-  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const svgBlob = new Blob([svgData.xml], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(svgBlob);
 
   img.onload = () => {
     ctx.scale(2, 2);
     ctx.fillStyle = "#f4f7f6";
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, svgData.width, svgData.height);
 
     ctx.drawImage(img, 0, 0);
 
