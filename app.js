@@ -328,18 +328,28 @@ document.getElementById("export-png")?.addEventListener("click", exportPNG);
 function getSvgWithStyles() {
   const svgEl = document.querySelector("#tree-container svg").cloneNode(true);
 
-  // Embed inline CSS into the SVG clone so it renders off-screen
+  // Embed complete explicit CSS into the SVG header for standalone viewing
   const styleEl = document.createElement("style");
   styleEl.textContent = `
-    .card-rect { fill: #ffffff; stroke: #2c3e50; stroke-width: 2px; }
-    .photo-circle { fill: #34495e; stroke: #3498db; stroke-width: 2px; }
-    .name { font-family: sans-serif; font-weight: bold; font-size: 13px; fill: #2c3e50; }
-    .dates { font-family: sans-serif; font-size: 11px; fill: #7f8c8d; }
-    .link { fill: none; stroke: #bdc3c7; stroke-width: 2px; }
-    .avatar-placeholder { font-family: sans-serif; }
-    .toggle-icon { font-family: sans-serif; }
+    .node rect.card-rect { fill: #ffffff !important; stroke: #2c3e50; stroke-width: 2px; }
+    .node circle.photo-circle { fill: #34495e; stroke: #3498db; stroke-width: 2px; }
+    .node text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .node text.name { font-weight: bold; font-size: 13px; fill: #2c3e50 !important; }
+    .node text.dates { font-size: 11px; fill: #7f8c8d !important; }
+    .node text.avatar-placeholder { fill: #ffffff !important; }
+    .node text.toggle-icon { fill: #7f8c8d !important; }
+    path.link { fill: none !important; stroke: #bdc3c7 !important; stroke-width: 2px !important; }
   `;
   svgEl.insertBefore(styleEl, svgEl.firstChild);
+
+  // Set explicit dimensions and SVG namespaces
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+  svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  svgEl.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  svgEl.setAttribute("width", width);
+  svgEl.setAttribute("height", height);
+  svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
   return new XMLSerializer().serializeToString(svgEl);
 }
@@ -359,10 +369,8 @@ function exportSVG() {
 }
 
 function exportPNG() {
-  const svgEl = document.querySelector("#tree-container svg");
   const svgData = getSvgWithStyles();
 
-  const container = document.getElementById("tree-container");
   const width = container.clientWidth;
   const height = container.clientHeight;
 
@@ -370,7 +378,6 @@ function exportPNG() {
   const ctx = canvas.getContext("2d");
   const img = new Image();
 
-  // Set 2x scale for high resolution
   canvas.width = width * 2;
   canvas.height = height * 2;
 
@@ -379,7 +386,6 @@ function exportPNG() {
 
   img.onload = () => {
     ctx.scale(2, 2);
-    // Draw canvas background color
     ctx.fillStyle = "#f4f7f6";
     ctx.fillRect(0, 0, width, height);
 
