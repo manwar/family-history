@@ -325,9 +325,27 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("export-svg")?.addEventListener("click", exportSVG);
 document.getElementById("export-png")?.addEventListener("click", exportPNG);
 
+function getSvgWithStyles() {
+  const svgEl = document.querySelector("#tree-container svg").cloneNode(true);
+
+  // Embed inline CSS into the SVG clone so it renders off-screen
+  const styleEl = document.createElement("style");
+  styleEl.textContent = `
+    .card-rect { fill: #ffffff; stroke: #2c3e50; stroke-width: 2px; }
+    .photo-circle { fill: #34495e; stroke: #3498db; stroke-width: 2px; }
+    .name { font-family: sans-serif; font-weight: bold; font-size: 13px; fill: #2c3e50; }
+    .dates { font-family: sans-serif; font-size: 11px; fill: #7f8c8d; }
+    .link { fill: none; stroke: #bdc3c7; stroke-width: 2px; }
+    .avatar-placeholder { font-family: sans-serif; }
+    .toggle-icon { font-family: sans-serif; }
+  `;
+  svgEl.insertBefore(styleEl, svgEl.firstChild);
+
+  return new XMLSerializer().serializeToString(svgEl);
+}
+
 function exportSVG() {
-  const svgEl = document.querySelector("#tree-container svg");
-  const svgData = new XMLSerializer().serializeToString(svgEl);
+  const svgData = getSvgWithStyles();
   const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
   const svgUrl = URL.createObjectURL(svgBlob);
 
@@ -337,28 +355,34 @@ function exportSVG() {
   document.body.appendChild(downloadLink);
   downloadLink.click();
   document.body.removeChild(downloadLink);
+  URL.revokeObjectURL(svgUrl);
 }
 
 function exportPNG() {
   const svgEl = document.querySelector("#tree-container svg");
-  const svgData = new XMLSerializer().serializeToString(svgEl);
+  const svgData = getSvgWithStyles();
+
+  const container = document.getElementById("tree-container");
+  const width = container.clientWidth;
+  const height = container.clientHeight;
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const img = new Image();
 
-  // Set high resolution output size
-  const bounds = svgEl.getBoundingClientRect();
-  canvas.width = bounds.width * 2;
-  canvas.height = bounds.height * 2;
+  // Set 2x scale for high resolution
+  canvas.width = width * 2;
+  canvas.height = height * 2;
 
   const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(svgBlob);
 
   img.onload = () => {
     ctx.scale(2, 2);
-    ctx.fillStyle = "#f4f7f6"; // canvas background color
-    ctx.fillRect(0, 0, bounds.width, bounds.height);
+    // Draw canvas background color
+    ctx.fillStyle = "#f4f7f6";
+    ctx.fillRect(0, 0, width, height);
+
     ctx.drawImage(img, 0, 0);
 
     const pngUrl = canvas.toDataURL("image/png");
