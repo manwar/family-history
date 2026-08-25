@@ -217,3 +217,20 @@ svg text {
 .drawer-content a:hover {
   text-decoration: underline;
 }
+
+.btn-export {
+  background-color: #34495e;
+  color: #ffffff;
+  border: 1px solid #7f8c8d;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin: 0 4px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-export:hover {
+  background-color: #1abc9c;
+  border-color: #16a085;
+}

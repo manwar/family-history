@@ -320,3 +320,56 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// --- EXPORT FUNCTIONS ---
+document.getElementById("export-svg")?.addEventListener("click", exportSVG);
+document.getElementById("export-png")?.addEventListener("click", exportPNG);
+
+function exportSVG() {
+  const svgEl = document.querySelector("#tree-container svg");
+  const svgData = new XMLSerializer().serializeToString(svgEl);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  const downloadLink = document.createElement("a");
+  downloadLink.href = svgUrl;
+  downloadLink.download = "family_tree.svg";
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
+
+function exportPNG() {
+  const svgEl = document.querySelector("#tree-container svg");
+  const svgData = new XMLSerializer().serializeToString(svgEl);
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const img = new Image();
+
+  // Set high resolution output size
+  const bounds = svgEl.getBoundingClientRect();
+  canvas.width = bounds.width * 2;
+  canvas.height = bounds.height * 2;
+
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = () => {
+    ctx.scale(2, 2);
+    ctx.fillStyle = "#f4f7f6"; // canvas background color
+    ctx.fillRect(0, 0, bounds.width, bounds.height);
+    ctx.drawImage(img, 0, 0);
+
+    const pngUrl = canvas.toDataURL("image/png");
+    const downloadLink = document.createElement("a");
+    downloadLink.href = pngUrl;
+    downloadLink.download = "family_tree.png";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(url);
+  };
+
+  img.src = url;
+}
