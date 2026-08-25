@@ -3,34 +3,52 @@ document.addEventListener("DOMContentLoaded", () => {
   const width = container.clientWidth;
   const height = container.clientHeight;
 
-  // Node dimensions
   const nodeWidth = 160;
   const nodeHeight = 60;
 
-  // Append SVG element with zoom support
+  // Append SVG
   const svg = d3.select("#tree-container")
     .append("svg")
     .attr("width", "100%")
-    .attr("height", "100%")
-    .call(d3.zoom().on("zoom", (event) => {
-      g.attr("transform", event.transform);
-    }));
+    .attr("height", "100%");
 
-  const g = svg.append("g")
-    .attr("transform", `translate(${width / 2}, 80)`);
+  // Transparent background rect to catch ALL pointer/drag events uniformly
+  const bg = svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("fill", "none")
+    .attr("pointer-events", "all");
+
+  // Main group that holds the tree
+  const g = svg.append("g");
+
+  // Configure Zoom behavior with smooth extents
+  const zoom = d3.zoom()
+    .scaleExtent([0.3, 2.5]) // Prevents extreme zoom jumps
+    .on("zoom", (event) => {
+      g.attr("transform", event.transform);
+    });
+
+  // Attach zoom event to the SVG element
+  svg.call(zoom);
+
+  // Initial centering calculation
+  const initialTransform = d3.zoomIdentity
+    .translate(width / 2, 80)
+    .scale(1);
+
+  svg.call(zoom.transform, initialTransform);
 
   // Fetch JSON data
   d3.json("data/family.json").then(data => {
-    // Convert data to D3 hierarchy
     const root = d3.hierarchy(data);
 
-    // Create D3 Tree Layout
     const treeLayout = d3.tree()
       .nodeSize([nodeWidth + 40, nodeHeight + 60]);
 
     treeLayout(root);
 
-    // Render Connecting Links
+    // Links
     g.selectAll(".link")
       .data(root.links())
       .enter()
@@ -41,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .y(d => d.y)
       );
 
-    // Render Nodes
+    // Nodes
     const node = g.selectAll(".node")
       .data(root.descendants())
       .enter()

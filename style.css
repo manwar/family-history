@@ -69,3 +69,8 @@ header p {
   stroke: #bdc3c7;
   stroke-width: 2px;
 }
+
+svg text {
+  user-select: none;
+  -webkit-user-select: none;
+}
