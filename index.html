@@ -9,15 +9,18 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
+  <!-- Single unified header -->
   <header>
     <h1>Family History Tree</h1>
+    <p>Use pinch/scroll to zoom and drag to navigate</p>
     <div class="search-box">
       <input type="text" id="node-search" placeholder="Search family member..." autocomplete="off">
     </div>
   </header>
 
+  <!-- Main tree container -->
   <main id="tree-container">
-    <!-- Floating Zoom Controls -->
+    <!-- Floating zoom controls -->
     <div class="zoom-controls">
       <button id="zoom-in" title="Zoom In">+</button>
       <button id="zoom-out" title="Zoom Out">−</button>
@@ -39,34 +42,6 @@
 
   <script src="app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
-</body>
-</html>
-<!DOCTYVPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family History Tree</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
-  <!-- D3.js Library -->
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-</head>
-<body>
-  <header>
-    <h1>Family History Tree</h1>
-    <p>Use pinch/scroll to zoom and drag to navigate</p>
-  </header>
-
-  <main id="tree-container"></main>
-
-  <script src="app.js"></script>
-  <script>
-    // Register Service Worker for PWA capabilities
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js')
         .then(() => console.log('Service Worker Registered'))
