@@ -18,12 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const defs = svg.append("defs");
 
-  // Transparent background rect to catch all pan/zoom events
+  // Background rect to handle zoom/pan and close drawer when clicking empty space
   svg.append("rect")
     .attr("width", "100%")
     .attr("height", "100%")
     .attr("fill", "none")
-    .attr("pointer-events", "all");
+    .attr("pointer-events", "all")
+    .on("click", () => closeDrawer());
 
   const g = svg.append("g");
 
@@ -42,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   svg.call(zoom.transform, initialTransform);
 
-  // --- CONNECT FLOATING BUTTON EVENT LISTENERS ---
+  // --- ZOOM BUTTON CONTROLS ---
   document.getElementById("zoom-in")?.addEventListener("click", () => {
     svg.transition().duration(300).call(zoom.scaleBy, 1.3);
   });
@@ -55,10 +56,66 @@ document.addEventListener("DOMContentLoaded", () => {
     svg.transition().duration(500).call(zoom.transform, initialTransform);
   });
 
+  // --- DRAWER CLOSE BUTTON ---
+  document.getElementById("close-drawer")?.addEventListener("click", () => closeDrawer());
+
+  function closeDrawer() {
+    const drawer = document.getElementById("detail-drawer");
+    if (drawer) drawer.classList.add("hidden");
+  }
+
+  function openDrawer(personData) {
+    const drawer = document.getElementById("detail-drawer");
+    const photoEl = document.getElementById("drawer-photo");
+    const nameEl = document.getElementById("drawer-name");
+    const datesEl = document.getElementById("drawer-dates");
+    const bioEl = document.getElementById("drawer-bio");
+
+    if (!drawer) return;
+
+    // Set basic text
+    nameEl.textContent = personData.name || "Unknown";
+    datesEl.textContent = `${personData.born || '?'} – ${personData.died || 'Present'}`;
+
+    // Photo handling
+    if (personData.photo && personData.photo !== "assets/photos/placeholder.jpg") {
+      photoEl.src = personData.photo;
+      photoEl.style.display = "block";
+    } else {
+      photoEl.style.display = "none";
+    }
+
+    // Extended Bio & Extra Fields
+    let bioContent = "";
+    if (personData.birthplace) {
+      bioContent += `<p><strong>Birthplace:</strong> ${personData.birthplace}</p>`;
+    }
+    if (personData.occupation) {
+      bioContent += `<p><strong>Occupation:</strong> ${personData.occupation}</p>`;
+    }
+    if (personData.bio) {
+      bioContent += `<p style="margin-top: 10px;">${personData.bio}</p>`;
+    } else if (!personData.birthplace && !personData.occupation) {
+      bioContent = "<p>No detailed biography available for this family member.</p>";
+    }
+
+    // Documents / Records Section
+    if (personData.documents && personData.documents.length > 0) {
+      bioContent += `<hr><h4 style="margin: 12px 0 6px 0;">Historical Records</h4><ul style="padding-left: 18px;">`;
+      personData.documents.forEach(doc => {
+        bioContent += `<li><a href="${doc.url}" target="_blank" rel="noopener">${doc.title}</a></li>`;
+      });
+      bioContent += `</ul>`;
+    }
+
+    bioEl.innerHTML = bioContent;
+    drawer.classList.remove("hidden");
+  }
+
   const treeLayout = d3.tree()
     .nodeSize([nodeWidth + 30, nodeHeight + 60]);
 
-  // --- LOAD FAMILY DATA ---
+  // --- LOAD DATA ---
   d3.json("data/family.json").then(data => {
     root = d3.hierarchy(data);
     root.x0 = 0;
@@ -74,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("Error loading family tree data:", error);
   });
 
-  // --- RENDER & UPDATE TREE ---
+  // --- UPDATE TREE ---
   function update(source) {
     const treeData = treeLayout(root);
     const nodes = treeData.descendants();
@@ -114,8 +171,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const nodeEnter = node.enter().append("g")
       .attr("class", "node")
       .attr("transform", () => `translate(${source.x0 - nodeWidth / 2}, ${source.y0 - nodeHeight / 2})`)
-      .style("cursor", d => (d.children || d._children) ? "pointer" : "default")
+      .style("cursor", "pointer")
       .on("click", (event, d) => {
+        event.stopPropagation(); // Prevent closing drawer via background click
+
+        // Open detail drawer with this node's full data
+        openDrawer(d.data);
+
+        // Expand/Collapse sub-tree logic
         if (d.children) {
           d._children = d.children;
           d.children = null;
@@ -126,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
         update(d);
       });
 
-    // Card Box
+    // Node Box
     nodeEnter.append("rect")
       .attr("class", "card-rect")
       .attr("width", nodeWidth)
@@ -134,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("rx", 10)
       .attr("ry", 10);
 
-    // Profile Photo Circle
+    // Circle Profile
     nodeEnter.append("circle")
       .attr("class", "photo-circle")
       .attr("cx", photoRadius + 12)
@@ -144,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .style("stroke", "#3498db")
       .style("stroke-width", "2px");
 
-    // Placeholder Emoji Icon
+    // Placeholder Icon
     nodeEnter.append("text")
       .attr("class", "avatar-placeholder")
       .attr("x", photoRadius + 12)
@@ -179,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("font-size", "12px")
       .attr("fill", "#7f8c8d");
 
-    // Update Node Position & Border Colors
+    // Transitions
     const nodeUpdate = node.merge(nodeEnter).transition()
       .duration(duration)
       .attr("transform", d => `translate(${d.x - nodeWidth / 2}, ${d.y - nodeHeight / 2})`);
@@ -232,7 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- CONNECT SEARCH INPUT ---
+  // --- SEARCH ---
   function setupSearch() {
     const searchInput = document.getElementById("node-search");
     if (!searchInput) return;
@@ -244,7 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
       nodes.forEach(d => {
         if (searchTerm !== "" && d.data.name.toLowerCase().includes(searchTerm)) {
           d.highlighted = true;
-          // Auto-center on first match
           const transform = d3.zoomIdentity
             .translate(width / 2 - d.x, height / 2 - d.y)
             .scale(1.2);

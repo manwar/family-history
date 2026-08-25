@@ -2,25 +2,33 @@
   "name": "John Doe",
   "born": "1890",
   "died": "1965",
-  "photo": "assets/photos/placeholder.jpg",
+  "birthplace": "London, UK",
+  "occupation": "Blacksmith",
+  "bio": "John served in WWI before establishing a local blacksmith shop. He was an avid gardener and community organizer.",
+  "documents": [
+    { "title": "1911 Census Record", "url": "#" },
+    { "title": "Military Discharge Paper", "url": "#" }
+  ],
   "children": [
     {
       "name": "Jane Doe",
       "born": "1920",
       "died": "1995",
-      "photo": "assets/photos/placeholder.jpg",
+      "birthplace": "Manchester, UK",
+      "occupation": "Teacher",
+      "bio": "Jane was a beloved elementary school teacher for 35 years.",
       "children": [
         {
           "name": "Alice Smith",
           "born": "1950",
           "died": "Present",
-          "photo": "assets/photos/placeholder.jpg"
+          "occupation": "Architect"
         },
         {
           "name": "Bob Smith",
           "born": "1953",
           "died": "Present",
-          "photo": "assets/photos/placeholder.jpg"
+          "occupation": "Engineer"
         }
       ]
     },
@@ -28,7 +36,7 @@
       "name": "Robert Doe",
       "born": "1925",
       "died": "2002",
-      "photo": "assets/photos/placeholder.jpg"
+      "birthplace": "London, UK"
     }
   ]
 }

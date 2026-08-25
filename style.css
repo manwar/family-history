@@ -148,3 +148,72 @@ svg text {
   border-radius: 8px;
   margin-bottom: 12px;
 }
+
+/* Drawer Container */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 340px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15);
+  z-index: 200;
+  padding: 24px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.drawer.hidden {
+  transform: translateX(100%);
+}
+
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #7f8c8d;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #2c3e50;
+}
+
+.drawer-content img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.drawer-content h2 {
+  font-size: 1.4rem;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.drawer-content .meta {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.drawer-content hr {
+  border: none;
+  border-top: 1px solid #ecf0f1;
+  margin: 12px 0;
+}
+
+.drawer-content a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.drawer-content a:hover {
+  text-decoration: underline;
+}
