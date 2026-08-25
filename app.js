@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const defs = svg.append("defs");
 
-  // Pointer event overlay
+  // Transparent background rect to catch all pan/zoom events
   svg.append("rect")
     .attr("width", "100%")
     .attr("height", "100%")
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const g = svg.append("g");
 
-  // Zoom setup
+  // --- ZOOM BEHAVIOR ---
   const zoom = d3.zoom()
     .scaleExtent([0.3, 2.5])
     .on("zoom", (event) => {
@@ -39,11 +39,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const initialTransform = d3.zoomIdentity
     .translate(width / 2, 80)
     .scale(1);
+
   svg.call(zoom.transform, initialTransform);
+
+  // --- CONNECT FLOATING BUTTON EVENT LISTENERS ---
+  document.getElementById("zoom-in")?.addEventListener("click", () => {
+    svg.transition().duration(300).call(zoom.scaleBy, 1.3);
+  });
+
+  document.getElementById("zoom-out")?.addEventListener("click", () => {
+    svg.transition().duration(300).call(zoom.scaleBy, 0.7);
+  });
+
+  document.getElementById("zoom-reset")?.addEventListener("click", () => {
+    svg.transition().duration(500).call(zoom.transform, initialTransform);
+  });
 
   const treeLayout = d3.tree()
     .nodeSize([nodeWidth + 30, nodeHeight + 60]);
 
+  // --- LOAD FAMILY DATA ---
   d3.json("data/family.json").then(data => {
     root = d3.hierarchy(data);
     root.x0 = 0;
@@ -54,10 +69,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     update(root);
+    setupSearch();
   }).catch(error => {
     console.error("Error loading family tree data:", error);
   });
 
+  // --- RENDER & UPDATE TREE ---
   function update(source) {
     const treeData = treeLayout(root);
     const nodes = treeData.descendants();
@@ -65,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nodes.forEach(d => { d.y = d.depth * (nodeHeight + 60); });
 
-    // Dynamic Image Patterns
+    // Avatar patterns
     nodes.forEach(d => {
       if (d.data.photo && d.data.photo !== "assets/photos/placeholder.jpg") {
         const patternId = `avatar-pattern-${d.id}`;
@@ -109,14 +126,15 @@ document.addEventListener("DOMContentLoaded", () => {
         update(d);
       });
 
-    // Node Box
+    // Card Box
     nodeEnter.append("rect")
+      .attr("class", "card-rect")
       .attr("width", nodeWidth)
       .attr("height", nodeHeight)
       .attr("rx", 10)
       .attr("ry", 10);
 
-    // Circle Profile Border
+    // Profile Photo Circle
     nodeEnter.append("circle")
       .attr("class", "photo-circle")
       .attr("cx", photoRadius + 12)
@@ -126,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .style("stroke", "#3498db")
       .style("stroke-width", "2px");
 
-    // Placeholder Emoji/Icon (Only shown if photo is missing or placeholder)
+    // Placeholder Emoji Icon
     nodeEnter.append("text")
       .attr("class", "avatar-placeholder")
       .attr("x", photoRadius + 12)
@@ -152,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("text-anchor", "start")
       .text(d => `${d.data.born || '?'} - ${d.data.died || 'Present'}`);
 
-    // Toggle Indicator
+    // Toggle Icon
     nodeEnter.append("text")
       .attr("class", "toggle-icon")
       .attr("x", nodeWidth - 14)
@@ -161,14 +179,14 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("font-size", "12px")
       .attr("fill", "#7f8c8d");
 
-    // Transitions
+    // Update Node Position & Border Colors
     const nodeUpdate = node.merge(nodeEnter).transition()
       .duration(duration)
       .attr("transform", d => `translate(${d.x - nodeWidth / 2}, ${d.y - nodeHeight / 2})`);
 
-    node.merge(nodeEnter).select("rect")
-      .style("stroke", d => d._children ? "#e74c3c" : "#2c3e50")
-      .style("stroke-width", d => d._children ? "3px" : "2px");
+    node.merge(nodeEnter).select("rect.card-rect")
+      .style("stroke", d => d.highlighted ? "#f1c40f" : (d._children ? "#e74c3c" : "#2c3e50"))
+      .style("stroke-width", d => d.highlighted ? "4px" : (d._children ? "3px" : "2px"));
 
     node.merge(nodeEnter).select(".toggle-icon")
       .text(d => {
@@ -211,6 +229,32 @@ document.addEventListener("DOMContentLoaded", () => {
     nodes.forEach(d => {
       d.x0 = d.x;
       d.y0 = d.y;
+    });
+  }
+
+  // --- CONNECT SEARCH INPUT ---
+  function setupSearch() {
+    const searchInput = document.getElementById("node-search");
+    if (!searchInput) return;
+
+    searchInput.addEventListener("input", (e) => {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      const nodes = root.descendants();
+
+      nodes.forEach(d => {
+        if (searchTerm !== "" && d.data.name.toLowerCase().includes(searchTerm)) {
+          d.highlighted = true;
+          // Auto-center on first match
+          const transform = d3.zoomIdentity
+            .translate(width / 2 - d.x, height / 2 - d.y)
+            .scale(1.2);
+          svg.transition().duration(500).call(zoom.transform, transform);
+        } else {
+          d.highlighted = false;
+        }
+      });
+
+      update(root);
     });
   }
 });
