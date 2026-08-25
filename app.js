@@ -3,10 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const width = container.clientWidth;
   const height = container.clientHeight;
 
-  // Node dimensions (expanded width to accommodate photo + text)
   const nodeWidth = 200;
   const nodeHeight = 70;
-  const photoRadius = 22; // Diameter will be 44px
+  const photoRadius = 22;
   const duration = 400;
 
   let root;
@@ -17,10 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
     .attr("width", "100%")
     .attr("height", "100%");
 
-  // SVG Definitions section for pattern/clipping masks
   const defs = svg.append("defs");
 
-  // Transparent background rect to catch all pan/zoom events
+  // Pointer event overlay
   svg.append("rect")
     .attr("width", "100%")
     .attr("height", "100%")
@@ -29,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const g = svg.append("g");
 
-  // Zoom Setup
+  // Zoom setup
   const zoom = d3.zoom()
     .scaleExtent([0.3, 2.5])
     .on("zoom", (event) => {
@@ -38,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   svg.call(zoom);
 
-  // Initial Center position
   const initialTransform = d3.zoomIdentity
     .translate(width / 2, 80)
     .scale(1);
@@ -47,7 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const treeLayout = d3.tree()
     .nodeSize([nodeWidth + 30, nodeHeight + 60]);
 
-  // Load JSON Data
   d3.json("data/family.json").then(data => {
     root = d3.hierarchy(data);
     root.x0 = 0;
@@ -69,10 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nodes.forEach(d => { d.y = d.depth * (nodeHeight + 60); });
 
-    // ---------------- DEFS (Dynamic Image Patterns) ----------------
-    // Create unique image patterns for nodes with photos
+    // Dynamic Image Patterns
     nodes.forEach(d => {
-      if (d.data.photo) {
+      if (d.data.photo && d.data.photo !== "assets/photos/placeholder.jpg") {
         const patternId = `avatar-pattern-${d.id}`;
         let pattern = defs.select(`#${patternId}`);
 
@@ -95,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // ---------------- NODES ----------------
+    // Nodes
     const node = g.selectAll("g.node")
       .data(nodes, d => d.id || (d.id = ++idCounter));
 
@@ -114,34 +109,34 @@ document.addEventListener("DOMContentLoaded", () => {
         update(d);
       });
 
-    // Base Card Rectangle
+    // Node Box
     nodeEnter.append("rect")
       .attr("width", nodeWidth)
       .attr("height", nodeHeight)
       .attr("rx", 10)
       .attr("ry", 10);
 
-    // Profile Photo Container (Circle)
+    // Circle Profile Border
     nodeEnter.append("circle")
       .attr("class", "photo-circle")
       .attr("cx", photoRadius + 12)
       .attr("cy", nodeHeight / 2)
       .attr("r", photoRadius)
-      .style("fill", d => d.data.photo ? `url(#avatar-pattern-${d.id})` : "#34495e")
+      .style("fill", d => (d.data.photo && d.data.photo !== "assets/photos/placeholder.jpg") ? `url(#avatar-pattern-${d.id})` : "#34495e")
       .style("stroke", "#3498db")
       .style("stroke-width", "2px");
 
-    // Placeholder Icon text (if no photo is provided in JSON)
+    // Placeholder Emoji/Icon (Only shown if photo is missing or placeholder)
     nodeEnter.append("text")
       .attr("class", "avatar-placeholder")
       .attr("x", photoRadius + 12)
       .attr("y", (nodeHeight / 2) + 5)
       .attr("text-anchor", "middle")
       .attr("fill", "#ffffff")
-      .attr("font-size", "14px")
-      .text(d => d.data.photo ? "" : "👤");
+      .attr("font-size", "16px")
+      .text(d => (d.data.photo && d.data.photo !== "assets/photos/placeholder.jpg") ? "" : "👤");
 
-    // Member Name (Shifted right to accommodate photo)
+    // Name
     nodeEnter.append("text")
       .attr("class", "name")
       .attr("x", (photoRadius * 2) + 24)
@@ -149,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("text-anchor", "start")
       .text(d => d.data.name);
 
-    // Member Dates
+    // Dates
     nodeEnter.append("text")
       .attr("class", "dates")
       .attr("x", (photoRadius * 2) + 24)
@@ -157,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("text-anchor", "start")
       .text(d => `${d.data.born || '?'} - ${d.data.died || 'Present'}`);
 
-    // Expand / Collapse Indicator Icon
+    // Toggle Indicator
     nodeEnter.append("text")
       .attr("class", "toggle-icon")
       .attr("x", nodeWidth - 14)
@@ -166,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("font-size", "12px")
       .attr("fill", "#7f8c8d");
 
-    // UPDATE: Smooth Position Transition
+    // Transitions
     const nodeUpdate = node.merge(nodeEnter).transition()
       .duration(duration)
       .attr("transform", d => `translate(${d.x - nodeWidth / 2}, ${d.y - nodeHeight / 2})`);
@@ -182,13 +177,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return "";
       });
 
-    // EXIT
     node.exit().transition()
       .duration(duration)
       .attr("transform", () => `translate(${source.x - nodeWidth / 2}, ${source.y - nodeHeight / 2})`)
       .remove();
 
-    // ---------------- LINKS ----------------
+    // Links
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
