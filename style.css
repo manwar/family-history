@@ -74,3 +74,77 @@ svg text {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* Header Search */
+.search-box {
+  margin-top: 8px;
+}
+.search-box input {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  width: 220px;
+  font-size: 14px;
+  outline: none;
+}
+
+/* Floating Controls */
+.zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+.zoom-controls button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #2c3e50;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  transition: transform 0.1s ease;
+}
+.zoom-controls button:active {
+  transform: scale(0.9);
+}
+
+/* Slide-out Drawer */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100%;
+  background: #fff;
+  box-shadow: -3px 0 10px rgba(0,0,0,0.15);
+  z-index: 200;
+  padding: 24px;
+  transition: transform 0.3s ease-in-out;
+  overflow-y: auto;
+}
+.drawer.hidden {
+  transform: translateX(100%);
+}
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+.drawer-content img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
