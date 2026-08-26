@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // --- RECURSIVE DATA TRANSFORMER FOR MULTI-SPOUSE LINKING ---
+  // --- RECURSIVE DATA TRANSFORMER ---
   function transformMultiSpouseData(data) {
     function processNode(node) {
       let combinedChildren = [];
@@ -143,15 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return cardGroup;
   }
 
-  // Calculate horizontal offset for a given spouse index
-  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 40) {
+  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 60) {
     if (spousesCount <= 0 || spouseIdx === undefined) return 0;
     const startX = -((spousesCount - 1) * spacing) / 2;
     return startX + spouseIdx * spacing;
   }
 
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 2.8, nodeHeight * 2.8]);
+    .nodeSize([nodeWidth * 3.2, nodeHeight * 2.8]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -268,49 +267,52 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // Group children by their specific parent spouse so each spouse has a separate horizontal branch line
+    // --- SEPARATE CONNECTIONS FOR EACH SPOUSE SUB-TREE ---
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
-    const getLinkSourcePos = (d) => {
+    const getLinkPoints = (d) => {
       const spouses = d.source.data.spousesList || [];
       const spouseIdx = d.target.data._parentSpouseIndex;
 
+      let startX = d.source.x;
+      let startY = d.source.y + photoRadius + 50;
+
       if (spouses.length > 0 && spouseIdx !== undefined && spouses[spouseIdx]) {
         const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
-        return {
-          x: d.source.x + spouseX,
-          y: d.source.y + photoRadius + 155
-        };
+        startX = d.source.x + spouseX;
+        startY = d.source.y + photoRadius + 155;
       }
-      return { x: d.source.x, y: d.source.y + photoRadius + 50 };
+
+      const targetX = d.target.x;
+      const targetY = d.target.y - photoRadius - 10;
+
+      // Separate horizontal mid-bus height per spouse level offset
+      const spouseLevelOffset = spouseIdx !== undefined ? (spouseIdx * 15) : 0;
+      const midY = startY + 30 + spouseLevelOffset;
+
+      return { startX, startY, midY, targetX, targetY };
     };
 
     const linkEnter = link.enter().insert("path", "g")
       .attr("class", "link")
       .attr("d", () => {
-        const sPos = getLinkSourcePos({ source: source, target: source });
-        return `M ${sPos.x} ${sPos.y} V ${source.y0} H ${sPos.x} V ${source.y0}`;
+        const p = getLinkPoints({ source: source, target: source });
+        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
       });
 
-    // Render individual stepped path branch for each spouse's children set
     link.merge(linkEnter).transition()
       .duration(duration)
       .attr("d", d => {
-        const sPos = getLinkSourcePos(d);
-        const ty = d.target.y - photoRadius - 10;
-
-        // Midpoint vertical drop directly below the specific spouse
-        const midY = sPos.y + 35;
-
-        return `M ${sPos.x} ${sPos.y} V ${midY} H ${d.target.x} V ${ty}`;
+        const p = getLinkPoints(d);
+        return `M ${p.startX} ${p.startY} V ${p.midY} H ${p.targetX} V ${p.targetY}`;
       });
 
     link.exit().transition()
       .duration(duration)
       .attr("d", () => {
-        const sPos = getLinkSourcePos({ source: source, target: source });
-        return `M ${sPos.x} ${sPos.y} V ${source.y} H ${sPos.x} V ${source.y}`;
+        const p = getLinkPoints({ source: source, target: source });
+        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
       })
       .remove();
 
