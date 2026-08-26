@@ -108,11 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // Set node dynamic height calculation based on spouse existence
-  const getNodeHeight = (d) => (d.data.spouse ? nodeHeight * 2.2 : nodeHeight);
-
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth + 40, nodeHeight * 2.5]);
+    .nodeSize([nodeWidth + 60, nodeHeight * 2.8]);
 
   // Helper to draw an individual card (avatar + name)
   function drawPersonCard(containerGroup, personData, offsetY) {
@@ -125,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         openDrawer(personData);
       });
 
-    // Outer ring / avatar clip
+    // Outer ring / avatar circle
     cardGroup.append("circle")
       .attr("cx", 0)
       .attr("cy", 0)
@@ -144,11 +141,11 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("font-size", "32px")
       .text((personData.photo && personData.photo !== "assets/photos/placeholder.jpg") ? "" : "👤");
 
-    // Name text underneath
+    // Name text underneath avatar with added margin to avoid collisions
     cardGroup.append("text")
       .attr("class", "name")
       .attr("x", 0)
-      .attr("y", photoRadius + 20)
+      .attr("y", photoRadius + 18)
       .attr("text-anchor", "middle")
       .style("font-weight", "600")
       .style("font-size", "14px")
@@ -183,9 +180,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const nodes = treeData.descendants();
     const links = treeData.links();
 
-    // Adjust vertical depth spacing dynamically
+    // Adjust vertical depth spacing dynamically to fit spouse structures
     nodes.forEach(d => {
-      d.y = d.depth * 280;
+      d.y = d.depth * 320;
     });
 
     // Register image patterns
@@ -228,41 +225,42 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("class", "node")
       .attr("transform", () => `translate(${source.x0}, ${source.y0})`);
 
-    // Render nodes with vertical spouse alignment
+    // Render nodes with corrected non-overlapping layout
     nodeEnter.each(function(d) {
       const nodeGroup = d3.select(this);
 
-      // 1. Primary Person
+      // 1. Primary Person Card
       drawPersonCard(nodeGroup, d.data, 0);
 
       // 2. Spouse Stacking & Connection Line
       if (d.data.spouse) {
-        const spouseOffsetY = photoRadius * 2 + 50;
+        // Increased offset to push the spouse card completely past the primary person's name text
+        const spouseOffsetY = photoRadius + 110;
 
-        // Vertical dashed line joining spouses
+        // Vertical dashed connection line between primary avatar and spouse avatar
         nodeGroup.append("line")
           .attr("x1", 0)
-          .attr("y1", photoRadius)
+          .attr("y1", photoRadius + 24)
           .attr("x2", 0)
-          .attr("y2", spouseOffsetY - photoRadius)
+          .attr("y2", spouseOffsetY - photoRadius - 6)
           .attr("stroke", "#cbd5e0")
           .attr("stroke-width", 2)
           .attr("stroke-dasharray", "3 3");
 
-        // SPOUSE label
+        // SPOUSE label positioned clearly along the connection line
         nodeGroup.append("text")
           .attr("x", 0)
-          .attr("y", photoRadius + 18)
+          .attr("y", photoRadius + 42)
           .attr("text-anchor", "middle")
           .style("font-size", "10px")
           .style("font-style", "italic")
-          .style("fill", "#a0aec0")
+          .style("fill", "#718096")
           .text("SPOUSE");
 
         // Small Heart Icon
         nodeGroup.append("text")
           .attr("x", 0)
-          .attr("y", photoRadius + 30)
+          .attr("y", photoRadius + 56)
           .attr("text-anchor", "middle")
           .style("font-size", "10px")
           .style("fill", "#e53e3e")
@@ -275,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (d.children || d._children) {
           nodeGroup.append("text")
             .attr("x", 0)
-            .attr("y", spouseOffsetY + photoRadius + 40)
+            .attr("y", spouseOffsetY + photoRadius + 42)
             .attr("text-anchor", "middle")
             .style("font-size", "10px")
             .style("font-style", "italic")
@@ -286,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // CHILDREN label for single parents
         nodeGroup.append("text")
           .attr("x", 0)
-          .attr("y", photoRadius + 40)
+          .attr("y", photoRadius + 42)
           .attr("text-anchor", "middle")
           .style("font-size", "10px")
           .style("font-style", "italic")
@@ -311,9 +309,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const getLinkSourceY = (d) => {
       if (d.source.data.spouse) {
-        return d.source.y + photoRadius * 3 + 100;
+        return d.source.y + photoRadius + 155;
       }
-      return d.source.y + photoRadius + 45;
+      return d.source.y + photoRadius + 50;
     };
 
     const linkEnter = link.enter().insert("path", "g")
