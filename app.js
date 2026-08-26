@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // --- RECURSIVE DATA TRANSFORMER FOR INDEPENDENT SPOUSE BRANCHES ---
+  // --- RECURSIVE DATA TRANSFORMER ---
   function transformMultiSpouseData(data) {
     function processNode(node) {
       let combinedChildren = [];
@@ -86,19 +86,14 @@ document.addEventListener("DOMContentLoaded", () => {
         sp.spouseId = `spouse-${++idCounter}`;
         if (sp.children) {
           sp.children.forEach(child => {
-            const processedChild = processNode(child);
-            processedChild._parentSpouseIndex = idx;
-            combinedChildren.push(processedChild);
+            child._parentSpouseIndex = idx;
+            combinedChildren.push(processNode(child));
           });
         }
       });
 
       if (node.children) {
-        node.children.forEach(child => {
-          const processedChild = processNode(child);
-          processedChild._parentSpouseIndex = 0;
-          combinedChildren.push(processedChild);
-        });
+        node.children.forEach(child => combinedChildren.push(processNode(child)));
       }
 
       node.spousesList = spousesList;
@@ -177,17 +172,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const nodes = treeData.descendants();
     const links = treeData.links();
 
+    const spouseOffsetY = photoRadius + 110;
+
     nodes.forEach(d => { d.y = d.depth * 380; });
 
-    // Separate child positions so children center directly beneath their specific parent spouse card
+    // Align child node positions directly beneath their respective spouse offset
     nodes.forEach(d => {
       if (d.parent && d.parent.data.spousesList && d.parent.data.spousesList.length > 0) {
         const spouseIdx = d.data._parentSpouseIndex || 0;
         const spouseOffset = getSpouseXOffset(d.parent.data.spousesList.length, spouseIdx);
-        // Adjust child target X to branch out directly relative to the specific spouse card position
-        d.spouseBaseX = d.parent.x + spouseOffset;
-      } else {
-        d.spouseBaseX = d.x;
+        d.x = d.x + spouseOffset;
       }
     });
 
@@ -222,8 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const nodeEnter = node.enter().append("g")
       .attr("class", "node")
       .attr("transform", () => `translate(${source.x0}, ${source.y0})`);
-
-    const spouseOffsetY = photoRadius + 110;
 
     nodeEnter.each(function(d) {
       const nodeGroup = d3.select(this);
@@ -284,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- SEPARATED INDEPENDENT LINK PATHS ---
+    // --- INDEPENDENT BRANCH LINK DRAWING ---
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
@@ -320,7 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .duration(duration)
       .attr("d", d => {
         const p = getLinkPoints(d);
-        // Clean orthogonal path originating from each spouse card's own base
         return `M ${p.startX} ${p.startY} V ${p.midY} H ${p.targetX} V ${p.targetY}`;
       });
 
