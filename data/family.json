@@ -12,7 +12,7 @@
   "spouse": {
     "name": "Spouse Name",
     "born": "YYYY",
-    "died": " - ",
+    "died": "Present",
     "birthplace": "Location",
     "occupation": "Occupation"
   },
@@ -20,7 +20,7 @@
     {
       "name": "Tabassum Jamal",
       "born": "1973",
-      "died": " - ",
+      "died": "Present",
       "birthplace": "Jamshedpur, India",
       "occupation": "Housewife",
       "bio": "Unknown",
@@ -28,19 +28,19 @@
         {
           "name": "Shakib Ahmad",
           "born": "1999",
-          "died": " - ",
+          "died": "Present",
           "occupation": "IT Professional"
         },
         {
           "name": "Mantasha Jamal",
           "born": "2002",
-          "died": " - ",
+          "died": "Present",
           "occupation": "IT Professional"
         },
         {
           "name": "Muntaha Jamal",
           "born": "2002",
-          "died": " - ",
+          "died": "Present",
           "occupation": "IT Professional"
         }
       ]
@@ -48,7 +48,7 @@
     {
       "name": "Mohammad Sajid Anwar",
       "born": "1975",
-      "died": " - ",
+      "died": "Present",
       "birthplace": "Jamshedpur, India",
       "occupation": "IT Professional",
       "bio": "Also known as Pali.",
@@ -56,19 +56,19 @@
         {
           "name": "Aairah Bint Mohammad",
           "born": "2009",
-          "died": " - ",
+          "died": "Present",
           "occupation": "Student"
         },
         {
           "name": "Aabia Bint Mohammad",
           "born": "2016",
-          "died": " - ",
+          "died": "Present",
           "occupation": "Student"
         },
         {
           "name": "Aania Bint Mohammad",
           "born": "2016",
-          "died": " - ",
+          "died": "Present",
           "occupation": "Student"
         }
       ]
@@ -76,7 +76,7 @@
     {
       "name": "Mohammad Khalid Anwar",
       "born": "1978",
-      "died": " - ",
+      "died": "Present",
       "birthplace": "Jamshedpur, India",
       "occupation": "IT Professional",
       "bio": "Also known as Pinkoo.",
@@ -84,13 +84,13 @@
         {
           "name": "Aashir",
           "born": "2013",
-          "died": " - ",
+          "died": "Present",
           "occupation": "Student"
         },
         {
           "name": "Zainab",
           "born": "2016",
-          "died": " - ",
+          "died": "Present",
           "occupation": "Student"
         }
       ]
