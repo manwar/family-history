@@ -10,11 +10,11 @@
     { "title": "Military Discharge Paper", "url": "#" }
   ],
   "spouse": {
-    "name": "Spouse Name",
-    "born": "YYYY",
-    "died": "Present",
-    "birthplace": "Location",
-    "occupation": "Occupation"
+    "name": "Firdaus Ahmad",
+    "born": "1968",
+    "died": "2023",
+    "birthplace": "Darbhanga, India",
+    "occupation": "Housewife"
   },
   "children": [
     {
@@ -24,6 +24,13 @@
       "birthplace": "Jamshedpur, India",
       "occupation": "Housewife",
       "bio": "Unknown",
+      "spouse": {
+        "name": "Nesar Ahmad",
+        "born": "1970",
+        "died": "-",
+        "birthplace": "Hajipur, India",
+        "occupation": "Businessman"
+      },
       "children": [
         {
           "name": "Shakib Ahmad",
@@ -52,6 +59,13 @@
       "birthplace": "Jamshedpur, India",
       "occupation": "IT Professional",
       "bio": "Also known as Pali.",
+      "spouse": {
+        "name": "Ghazala Tabassum",
+        "born": "1970",
+        "died": "-",
+        "birthplace": "Bhagalpur, India",
+        "occupation": "Housewife"
+      },
       "children": [
         {
           "name": "Aairah Bint Mohammad",
@@ -80,6 +94,13 @@
       "birthplace": "Jamshedpur, India",
       "occupation": "IT Professional",
       "bio": "Also known as Pinkoo.",
+      "spouse": {
+        "name": "Farheen",
+        "born": "1905",
+        "died": "-",
+        "birthplace": "Jamshedpur, India",
+        "occupation": "Housewife"
+      },
       "children": [
         {
           "name": "Aashir",
