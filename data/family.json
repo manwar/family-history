@@ -9,110 +9,225 @@
     { "title": "1911 Census Record", "url": "#" },
     { "title": "Military Discharge Paper", "url": "#" }
   ],
-  "spouse": {
-    "name": "Firdaus Ahmad",
-    "born": "1968",
-    "died": "2023",
-    "birthplace": "Darbhanga, India",
-    "occupation": "Housewife"
-  },
-  "children": [
+  "spouses": [
     {
-      "name": "Tabassum Jamal",
-      "born": "1973",
-      "died": "Present",
-      "birthplace": "Jamshedpur, India",
+      "name": "Firdaus Ahmad",
+      "born": "1968",
+      "died": "2023",
+      "birthplace": "Darbhanga, India",
       "occupation": "Housewife",
-      "bio": "Unknown",
-      "spouse": {
-        "name": "Nesar Ahmad",
-        "born": "1970",
-        "died": "-",
-        "birthplace": "Hajipur, India",
-        "occupation": "Businessman"
-      },
       "children": [
         {
-          "name": "Shakib Ahmad",
-          "born": "1999",
+          "name": "Tabassum Jamal",
+          "born": "1973",
           "died": "Present",
-          "occupation": "IT Professional"
+          "birthplace": "Jamshedpur, India",
+          "occupation": "Housewife",
+          "bio": "Unknown",
+          "spouses": [
+            {
+              "name": "Nesar Ahmad",
+              "born": "1970",
+              "died": "-",
+              "birthplace": "Hajipur, India",
+              "occupation": "Businessman",
+              "children": [
+                {
+                  "name": "Shakib Ahmad",
+                  "born": "1999",
+                  "died": "Present",
+                  "occupation": "IT Professional"
+                },
+                {
+                  "name": "Mantasha Jamal",
+                  "born": "2002",
+                  "died": "Present",
+                  "occupation": "IT Professional"
+                },
+                {
+                  "name": "Muntaha Jamal",
+                  "born": "2002",
+                  "died": "Present",
+                  "occupation": "IT Professional"
+                }
+              ]
+            },
+            {
+              "name": "Spouse 2 Name",
+              "born": "YYYY",
+              "died": "Present",
+              "birthplace": "Location",
+              "occupation": "Occupation",
+              "children": []
+            }
+          ]
         },
         {
-          "name": "Mantasha Jamal",
-          "born": "2002",
+          "name": "Mohammad Sajid Anwar",
+          "born": "1975",
           "died": "Present",
-          "occupation": "IT Professional"
+          "birthplace": "Jamshedpur, India",
+          "occupation": "IT Professional",
+          "bio": "Also known as Pali.",
+          "spouses": [
+            {
+              "name": "Ghazala Tabassum",
+              "born": "1970",
+              "died": "Present",
+              "birthplace": "Bhagalpur, India",
+              "occupation": "Housewife",
+              "children": [
+                {
+                  "name": "Aairah Bint Mohammad",
+                  "born": "2009",
+                  "died": "Present",
+                  "occupation": "Student"
+                },
+                {
+                  "name": "Aabia Bint Mohammad",
+                  "born": "2016",
+                  "died": "Present",
+                  "occupation": "Student"
+                },
+                {
+                  "name": "Aania Bint Mohammad",
+                  "born": "2016",
+                  "died": "Present",
+                  "occupation": "Student"
+                }
+              ]
+            },
+            {
+              "name": "Spouse 2 Name",
+              "born": "YYYY",
+              "died": "Present",
+              "birthplace": "Location",
+              "occupation": "Occupation",
+              "children": []
+            }
+          ]
         },
         {
-          "name": "Muntaha Jamal",
-          "born": "2002",
+          "name": "Mohammad Khalid Anwar",
+          "born": "1978",
           "died": "Present",
-          "occupation": "IT Professional"
+          "birthplace": "Jamshedpur, India",
+          "occupation": "IT Professional",
+          "bio": "Also known as Pinkoo.",
+          "spouses": [
+            {
+              "name": "Farheen",
+              "born": "1905",
+              "died": "-",
+              "birthplace": "Jamshedpur, India",
+              "occupation": "Housewife",
+              "children": [
+                {
+                  "name": "Aashir",
+                  "born": "2013",
+                  "died": "Present",
+                  "occupation": "Student"
+                },
+                {
+                  "name": "Zainab",
+                  "born": "2016",
+                  "died": "Present",
+                  "occupation": "Student"
+                }
+              ]
+            },
+            {
+              "name": "Spouse 2 Name",
+              "born": "YYYY",
+              "died": "Present",
+              "birthplace": "Location",
+              "occupation": "Occupation",
+              "children": []
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Mohammad Sajid Anwar",
-      "born": "1975",
+      "name": "Naema Begum",
+      "born": "1968",
       "died": "Present",
       "birthplace": "Jamshedpur, India",
-      "occupation": "IT Professional",
-      "bio": "Also known as Pali.",
-      "spouse": {
-        "name": "Ghazala Tabassum",
-        "born": "1970",
-        "died": "-",
-        "birthplace": "Bhagalpur, India",
-        "occupation": "Housewife"
-      },
+      "occupation": "Houseeife",
       "children": [
         {
-          "name": "Aairah Bint Mohammad",
-          "born": "2009",
+          "name": "Shaesta Jamal",
+          "born": "1990",
           "died": "Present",
-          "occupation": "Student"
+          "occupation": "School Teacher",
+          "spouses": [
+            {
+              "name": "Spouse Name",
+              "born": "1905",
+              "died": "Present",
+              "birthplace": "Jamshedpur, India",
+              "occupation": "Manager",
+              "children": [
+                {
+                  "name": "Child 1",
+                  "born": "2013",
+                  "died": "Present",
+                  "occupation": "Student"
+                },
+                {
+                  "name": "Child 2",
+                  "born": "2016",
+                  "died": "Present",
+                  "occupation": "Student"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "Aabia Bint Mohammad",
-          "born": "2016",
+          "name": "Shagufta Jamal",
+          "born": "1995",
           "died": "Present",
-          "occupation": "Student"
+          "occupation": "Businesswoman",
+          "spouses": [
+            {
+              "name": "Spouse Name",
+              "born": "1905",
+              "died": "Present",
+              "birthplace": "Delhi, India",
+              "occupation": "Manager",
+              "children": [
+                {
+                  "name": "Child 1",
+                  "born": "2013",
+                  "died": "Present",
+                  "occupation": "Student"
+                },
+                {
+                  "name": "Child 2",
+                  "born": "2016",
+                  "died": "Present",
+                  "occupation": "Student"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "Aania Bint Mohammad",
-          "born": "2016",
+          "name": "Majid Anwar",
+          "born": "1997",
           "died": "Present",
-          "occupation": "Student"
-        }
-      ]
-    },
-    {
-      "name": "Mohammad Khalid Anwar",
-      "born": "1978",
-      "died": "Present",
-      "birthplace": "Jamshedpur, India",
-      "occupation": "IT Professional",
-      "bio": "Also known as Pinkoo.",
-      "spouse": {
-        "name": "Farheen",
-        "born": "1905",
-        "died": "-",
-        "birthplace": "Jamshedpur, India",
-        "occupation": "Housewife"
-      },
-      "children": [
-        {
-          "name": "Aashir",
-          "born": "2013",
-          "died": "Present",
-          "occupation": "Student"
-        },
-        {
-          "name": "Zainab",
-          "born": "2016",
-          "died": "Present",
-          "occupation": "Student"
+          "occupation": "Manager",
+          "spouses": [
+            {
+              "name": "Spouse Name",
+              "born": "1905",
+              "died": "Present",
+              "birthplace": "Jamshedpur, India",
+              "occupation": "Housewife",
+              "children": []
+            }
+          ]
         }
       ]
     }
