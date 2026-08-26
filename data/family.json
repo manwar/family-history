@@ -51,14 +51,6 @@
                   "occupation": "IT Professional"
                 }
               ]
-            },
-            {
-              "name": "Spouse 2 Name",
-              "born": "YYYY",
-              "died": "Present",
-              "birthplace": "Location",
-              "occupation": "Occupation",
-              "children": []
             }
           ]
         },
@@ -96,14 +88,6 @@
                   "occupation": "Student"
                 }
               ]
-            },
-            {
-              "name": "Spouse 2 Name",
-              "born": "YYYY",
-              "died": "Present",
-              "birthplace": "Location",
-              "occupation": "Occupation",
-              "children": []
             }
           ]
         },
@@ -135,14 +119,6 @@
                   "occupation": "Student"
                 }
               ]
-            },
-            {
-              "name": "Spouse 2 Name",
-              "born": "YYYY",
-              "died": "Present",
-              "birthplace": "Location",
-              "occupation": "Occupation",
-              "children": []
             }
           ]
         }
