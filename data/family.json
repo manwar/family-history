@@ -1,14 +1,26 @@
 {
-  "name": "Syed Shahid Ahmad",
-  "born": "1947",
-  "died": "2023",
-  "birthplace": "Samastipur, India",
-  "occupation": "Lawyer",
-  "bio": "Unknown",
-  "documents": [
-    { "title": "1911 Census Record", "url": "#" },
-    { "title": "Military Discharge Paper", "url": "#" }
-  ],
+  "name": "Syed Shahid Ahmad & Spouse",
+  "isCouple": true,
+  "husband": {
+    "name": "Syed Shahid Ahmad",
+    "born": "1947",
+    "died": "2023",
+    "birthplace": "Samastipur, India",
+    "occupation": "Lawyer",
+    "bio": "Unknown",
+    "documents": [
+      { "title": "1911 Census Record", "url": "#" },
+      { "title": "Military Discharge Paper", "url": "#" }
+    ]
+  },
+  "wife": {
+    "name": "Spouse Name",
+    "born": "YYYY",
+    "died": " - ",
+    "birthplace": "Location",
+    "occupation": "Occupation",
+    "bio": "Unknown"
+  },
   "children": [
     {
       "name": "Tabassum Jamal",
