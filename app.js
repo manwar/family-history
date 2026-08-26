@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 3.2, nodeHeight * 3.0]);
+    .nodeSize([nodeWidth * 3.2, nodeHeight * 3.2]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const nodes = treeData.descendants();
     const links = treeData.links();
 
-    nodes.forEach(d => { d.y = d.depth * 360; });
+    nodes.forEach(d => { d.y = d.depth * 380; });
 
     // Register image patterns
     nodes.forEach(d => {
@@ -206,6 +206,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("class", "node")
       .attr("transform", () => `translate(${source.x0}, ${source.y0})`);
 
+    const spouseOffsetY = photoRadius + 110;
+
     nodeEnter.each(function(d) {
       const nodeGroup = d3.select(this);
 
@@ -217,8 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const totalSpouses = spouses.length;
 
       if (totalSpouses > 0) {
-        const spouseOffsetY = photoRadius + 110;
-
         spouses.forEach((spouse, idx) => {
           const spouseX = getSpouseXOffset(totalSpouses, idx);
 
@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (spouse.children && spouse.children.length > 0) {
             nodeGroup.append("text")
               .attr("x", spouseX)
-              .attr("y", spouseOffsetY + photoRadius + 42)
+              .attr("y", spouseOffsetY + photoRadius + 32)
               .attr("text-anchor", "middle")
               .style("font-size", "10px")
               .style("font-style", "italic")
@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- SEPARATE AND UN-OVERLAPPED CONNECTIONS ---
+    // --- SEPARATE CONNECTIONS WITH STRICT OFFSETTING ---
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
@@ -281,16 +281,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (spouses.length > 0 && spouseIdx !== undefined && spouses[spouseIdx]) {
         const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
         startX = d.source.x + spouseX;
-        // Start below the "CHILDREN" text label
-        startY = d.source.y + photoRadius + 160;
+        // Start cleanly below the "CHILDREN" text label (spouseOffsetY + photoRadius + 45)
+        startY = d.source.y + spouseOffsetY + photoRadius + 45;
       }
 
       const targetX = d.target.x;
       const targetY = d.target.y - photoRadius - 10;
 
-      // Increased vertical staggering (25px offset per spouse) to eliminate path overlap
-      const spouseLevelOffset = spouseIdx !== undefined ? (spouseIdx * 25) : 0;
-      const midY = startY + 25 + spouseLevelOffset;
+      // Tiered horizontal lines per spouse index to prevent lines from running into each other
+      const spouseLevelOffset = spouseIdx !== undefined ? (spouseIdx * 30) : 0;
+      const midY = startY + 20 + spouseLevelOffset;
 
       return { startX, startY, midY, targetX, targetY };
     };
