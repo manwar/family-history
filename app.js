@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 3.2, nodeHeight * 3.2]);
+    .nodeSize([nodeWidth * 3.2, nodeHeight * 3.5]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const nodes = treeData.descendants();
     const links = treeData.links();
 
-    nodes.forEach(d => { d.y = d.depth * 380; });
+    nodes.forEach(d => { d.y = d.depth * 400; });
 
     // Register image patterns
     nodes.forEach(d => {
@@ -245,6 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
           drawPersonCard(nodeGroup, spouse, spouseX, spouseOffsetY);
 
           if (spouse.children && spouse.children.length > 0) {
+            // Label placed cleanly under spouse card
             nodeGroup.append("text")
               .attr("x", spouseX)
               .attr("y", spouseOffsetY + photoRadius + 32)
@@ -253,6 +254,15 @@ document.addEventListener("DOMContentLoaded", () => {
               .style("font-style", "italic")
               .style("fill", "#718096")
               .text("CHILDREN");
+
+            // Vertical trunk line starting BELOW the "CHILDREN" text label
+            nodeGroup.append("line")
+              .attr("x1", spouseX)
+              .attr("y1", spouseOffsetY + photoRadius + 40)
+              .attr("x2", spouseX)
+              .attr("y2", spouseOffsetY + photoRadius + 75 + (idx * 20))
+              .attr("stroke", "#cbd5e0")
+              .attr("stroke-width", 2);
           }
         });
       }
@@ -267,7 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- SEPARATE CONNECTIONS WITH STRICT OFFSETTING ---
+    // --- LINK CALCULATION (PER-SPOUSE BUS BAR) ---
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
@@ -281,16 +291,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (spouses.length > 0 && spouseIdx !== undefined && spouses[spouseIdx]) {
         const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
         startX = d.source.x + spouseX;
-        // Start cleanly below the "CHILDREN" text label (spouseOffsetY + photoRadius + 45)
-        startY = d.source.y + spouseOffsetY + photoRadius + 45;
+        // Start after the vertical trunk below "CHILDREN" label
+        startY = d.source.y + spouseOffsetY + photoRadius + 75 + (spouseIdx * 20);
       }
 
       const targetX = d.target.x;
       const targetY = d.target.y - photoRadius - 10;
 
-      // Tiered horizontal lines per spouse index to prevent lines from running into each other
-      const spouseLevelOffset = spouseIdx !== undefined ? (spouseIdx * 30) : 0;
-      const midY = startY + 20 + spouseLevelOffset;
+      const midY = startY;
 
       return { startX, startY, midY, targetX, targetY };
     };
@@ -306,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .duration(duration)
       .attr("d", d => {
         const p = getLinkPoints(d);
-        return `M ${p.startX} ${p.startY} V ${p.midY} H ${p.targetX} V ${p.targetY}`;
+        return `M ${p.startX} ${p.startY} H ${p.targetX} V ${p.targetY}`;
       });
 
     link.exit().transition()
