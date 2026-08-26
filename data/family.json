@@ -1,42 +1,99 @@
-[
-  {
-    "id": "1",
-    "name": "Syed Shahid Ahmad",
-    "born": "1947",
-    "died": "2023",
-    "birthplace": "Samastipur, India",
-    "occupation": "Lawyer",
-    "bio": "Unknown",
-    "spouseId": "2",
-    "childrenIds": ["3", "4", "5"]
-  },
-  {
-    "id": "2",
+{
+  "name": "Syed Shahid Ahmad",
+  "born": "1947",
+  "died": "2023",
+  "birthplace": "Samastipur, India",
+  "occupation": "Lawyer",
+  "bio": "Unknown",
+  "documents": [
+    { "title": "1911 Census Record", "url": "#" },
+    { "title": "Military Discharge Paper", "url": "#" }
+  ],
+  "spouse": {
     "name": "Spouse Name",
     "born": "YYYY",
     "died": " - ",
-    "spouseId": "1",
-    "childrenIds": ["3", "4", "5"]
+    "birthplace": "Location",
+    "occupation": "Occupation"
   },
-  {
-    "id": "3",
-    "name": "Tabassum Jamal",
-    "born": "1973",
-    "died": " - ",
-    "parentIds": ["1", "2"]
-  },
-  {
-    "id": "4",
-    "name": "Mohammad Sajid Anwar",
-    "born": "1975",
-    "died": " - ",
-    "parentIds": ["1", "2"]
-  },
-  {
-    "id": "5",
-    "name": "Mohammad Khalid Anwar",
-    "born": "1978",
-    "died": " - ",
-    "parentIds": ["1", "2"]
-  }
-]
+  "children": [
+    {
+      "name": "Tabassum Jamal",
+      "born": "1973",
+      "died": " - ",
+      "birthplace": "Jamshedpur, India",
+      "occupation": "Housewife",
+      "bio": "Unknown",
+      "children": [
+        {
+          "name": "Shakib Ahmad",
+          "born": "1999",
+          "died": " - ",
+          "occupation": "IT Professional"
+        },
+        {
+          "name": "Mantasha Jamal",
+          "born": "2002",
+          "died": " - ",
+          "occupation": "IT Professional"
+        },
+        {
+          "name": "Muntaha Jamal",
+          "born": "2002",
+          "died": " - ",
+          "occupation": "IT Professional"
+        }
+      ]
+    },
+    {
+      "name": "Mohammad Sajid Anwar",
+      "born": "1975",
+      "died": " - ",
+      "birthplace": "Jamshedpur, India",
+      "occupation": "IT Professional",
+      "bio": "Also known as Pali.",
+      "children": [
+        {
+          "name": "Aairah Bint Mohammad",
+          "born": "2009",
+          "died": " - ",
+          "occupation": "Student"
+        },
+        {
+          "name": "Aabia Bint Mohammad",
+          "born": "2016",
+          "died": " - ",
+          "occupation": "Student"
+        },
+        {
+          "name": "Aania Bint Mohammad",
+          "born": "2016",
+          "died": " - ",
+          "occupation": "Student"
+        }
+      ]
+    },
+    {
+      "name": "Mohammad Khalid Anwar",
+      "born": "1978",
+      "died": " - ",
+      "birthplace": "Jamshedpur, India",
+      "occupation": "IT Professional",
+      "bio": "Also known as Pinkoo.",
+      "children": [
+        {
+          "name": "Aashir",
+          "born": "2013",
+          "died": " - ",
+          "occupation": "Student"
+        },
+        {
+          "name": "Zainab",
+          "born": "2016",
+          "died": " - ",
+          "occupation": "Student"
+        }
+      ]
+    }
+  ]
+}

@@ -117,7 +117,65 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth + 30, nodeHeight + 60]);
+    .nodeSize([nodeWidth + 60, nodeHeight + 60]);
+
+  // Helper to draw an individual card into a container group
+  function drawPersonCard(containerGroup, personData, offsetX, isSpouse = false) {
+    const cardGroup = containerGroup.append("g")
+      .attr("class", isSpouse ? "spouse-card" : "primary-card")
+      .attr("transform", `translate(${offsetX}, 0)`)
+      .style("cursor", "pointer")
+      .on("click", (event) => {
+        event.stopPropagation();
+        openDrawer(personData);
+      });
+
+    // Node Box
+    cardGroup.append("rect")
+      .attr("class", "card-rect")
+      .attr("width", nodeWidth)
+      .attr("height", nodeHeight)
+      .attr("rx", 10)
+      .attr("ry", 10);
+
+    // Circle Profile
+    cardGroup.append("circle")
+      .attr("class", "photo-circle")
+      .attr("cx", photoRadius + 12)
+      .attr("cy", nodeHeight / 2)
+      .attr("r", photoRadius)
+      .style("fill", (personData.photo && personData.photo !== "assets/photos/placeholder.jpg") ? `url(#avatar-pattern-${personData.id || personData.spouseId})` : "#34495e")
+      .style("stroke", "#3498db")
+      .style("stroke-width", "2px");
+
+    // Placeholder Icon
+    cardGroup.append("text")
+      .attr("class", "avatar-placeholder")
+      .attr("x", photoRadius + 12)
+      .attr("y", (nodeHeight / 2) + 5)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#ffffff")
+      .attr("font-size", "16px")
+      .text((personData.photo && personData.photo !== "assets/photos/placeholder.jpg") ? "" : "👤");
+
+    // Name
+    cardGroup.append("text")
+      .attr("class", "name")
+      .attr("x", (photoRadius * 2) + 24)
+      .attr("y", 30)
+      .attr("text-anchor", "start")
+      .text(personData.name);
+
+    // Dates
+    cardGroup.append("text")
+      .attr("class", "dates")
+      .attr("x", (photoRadius * 2) + 24)
+      .attr("y", 48)
+      .attr("text-anchor", "start")
+      .text(`${personData.born || '?'} - ${personData.died || 'Present'}`);
+
+    return cardGroup;
+  }
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(data => {
@@ -127,6 +185,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     root.descendants().forEach(d => {
       d.id = ++idCounter;
+      if (d.data.spouse) {
+        d.data.spouse.spouseId = `spouse-${d.id}`;
+      }
     });
 
     update(root);
@@ -143,28 +204,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nodes.forEach(d => { d.y = d.depth * (nodeHeight + 60); });
 
-    // Avatar patterns
+    // Avatar patterns for primary nodes and spouses
     nodes.forEach(d => {
-      if (d.data.photo && d.data.photo !== "assets/photos/placeholder.jpg") {
-        const patternId = `avatar-pattern-${d.id}`;
-        let pattern = defs.select(`#${patternId}`);
+      const createPattern = (id, photo) => {
+        if (photo && photo !== "assets/photos/placeholder.jpg") {
+          const patternId = `avatar-pattern-${id}`;
+          let pattern = defs.select(`#${patternId}`);
 
-        if (pattern.empty()) {
-          pattern = defs.append("pattern")
-            .attr("id", patternId)
-            .attr("height", 1)
-            .attr("width", 1)
-            .attr("x", "0")
-            .attr("y", "0");
+          if (pattern.empty()) {
+            pattern = defs.append("pattern")
+              .attr("id", patternId)
+              .attr("height", 1)
+              .attr("width", 1)
+              .attr("x", "0")
+              .attr("y", "0");
 
-          pattern.append("image")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("height", photoRadius * 2)
-            .attr("width", photoRadius * 2)
-            .attr("preserveAspectRatio", "xMidYMid slice")
-            .attr("xlink:href", d.data.photo);
+            pattern.append("image")
+              .attr("x", 0)
+              .attr("y", 0)
+              .attr("height", photoRadius * 2)
+              .attr("width", photoRadius * 2)
+              .attr("preserveAspectRatio", "xMidYMid slice")
+              .attr("xlink:href", photo);
+          }
         }
+      };
+
+      createPattern(d.id, d.data.photo);
+      if (d.data.spouse) {
+        createPattern(d.data.spouse.spouseId, d.data.spouse.photo);
       }
     });
 
@@ -174,84 +242,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nodeEnter = node.enter().append("g")
       .attr("class", "node")
-      .attr("transform", () => `translate(${source.x0 - nodeWidth / 2}, ${source.y0 - nodeHeight / 2})`)
-      .style("cursor", "pointer")
-      .on("click", (event, d) => {
-        event.stopPropagation(); // Prevent closing drawer via background click
+      .attr("transform", () => `translate(${source.x0 - nodeWidth / 2}, ${source.y0 - nodeHeight / 2})`);
 
-        // Open detail drawer with this node's full data
-        openDrawer(d.data);
+    // Render elements for entered nodes
+    nodeEnter.each(function(d) {
+      const nodeGroup = d3.select(this);
 
-        // Expand/Collapse sub-tree logic
-        if (d.children) {
-          d._children = d.children;
-          d.children = null;
-        } else if (d._children) {
-          d.children = d._children;
-          d._children = null;
-        }
-        update(d);
-      });
+      // 1. Draw Primary Person Card
+      drawPersonCard(nodeGroup, d.data, 0, false);
 
-    // Node Box
-    nodeEnter.append("rect")
-      .attr("class", "card-rect")
-      .attr("width", nodeWidth)
-      .attr("height", nodeHeight)
-      .attr("rx", 10)
-      .attr("ry", 10);
+      // 2. Draw Spouse Card & Marriage Line (if spouse exists)
+      if (d.data.spouse) {
+        const spouseOffset = nodeWidth + 30;
 
-    // Circle Profile
-    nodeEnter.append("circle")
-      .attr("class", "photo-circle")
-      .attr("cx", photoRadius + 12)
-      .attr("cy", nodeHeight / 2)
-      .attr("r", photoRadius)
-      .style("fill", d => (d.data.photo && d.data.photo !== "assets/photos/placeholder.jpg") ? `url(#avatar-pattern-${d.id})` : "#34495e")
-      .style("stroke", "#3498db")
-      .style("stroke-width", "2px");
+        nodeGroup.append("line")
+          .attr("class", "marriage-line")
+          .attr("x1", nodeWidth)
+          .attr("y1", nodeHeight / 2)
+          .attr("x2", spouseOffset)
+          .attr("y2", nodeHeight / 2)
+          .attr("stroke", "#4A5568")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", "4 2");
 
-    // Placeholder Icon
-    nodeEnter.append("text")
-      .attr("class", "avatar-placeholder")
-      .attr("x", photoRadius + 12)
-      .attr("y", (nodeHeight / 2) + 5)
-      .attr("text-anchor", "middle")
-      .attr("fill", "#ffffff")
-      .attr("font-size", "16px")
-      .text(d => (d.data.photo && d.data.photo !== "assets/photos/placeholder.jpg") ? "" : "👤");
+        drawPersonCard(nodeGroup, d.data.spouse, spouseOffset, true);
+      }
 
-    // Name
-    nodeEnter.append("text")
-      .attr("class", "name")
-      .attr("x", (photoRadius * 2) + 24)
-      .attr("y", 30)
-      .attr("text-anchor", "start")
-      .text(d => d.data.name);
-
-    // Dates
-    nodeEnter.append("text")
-      .attr("class", "dates")
-      .attr("x", (photoRadius * 2) + 24)
-      .attr("y", 48)
-      .attr("text-anchor", "start")
-      .text(d => `${d.data.born || '?'} - ${d.data.died || 'Present'}`);
-
-    // Toggle Icon
-    nodeEnter.append("text")
-      .attr("class", "toggle-icon")
-      .attr("x", nodeWidth - 14)
-      .attr("y", (nodeHeight / 2) + 4)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("fill", "#7f8c8d");
+      // 3. Toggle Icon on primary card
+      nodeGroup.append("text")
+        .attr("class", "toggle-icon")
+        .attr("x", nodeWidth - 14)
+        .attr("y", (nodeHeight / 2) + 4)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("fill", "#7f8c8d")
+        .style("cursor", "pointer")
+        .on("click", (event) => {
+          event.stopPropagation();
+          if (d.children) {
+            d._children = d.children;
+            d.children = null;
+          } else if (d._children) {
+            d.children = d._children;
+            d._children = null;
+          }
+          update(d);
+        });
+    });
 
     // Transitions
     const nodeUpdate = node.merge(nodeEnter).transition()
       .duration(duration)
       .attr("transform", d => `translate(${d.x - nodeWidth / 2}, ${d.y - nodeHeight / 2})`);
 
-    node.merge(nodeEnter).select("rect.card-rect")
+    node.merge(nodeEnter).selectAll("rect.card-rect")
       .style("stroke", d => d.highlighted ? "#f1c40f" : (d._children ? "#e74c3c" : "#2c3e50"))
       .style("stroke-width", d => d.highlighted ? "4px" : (d._children ? "3px" : "2px"));
 
@@ -309,7 +353,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const nodes = root.descendants();
 
       nodes.forEach(d => {
-        if (searchTerm !== "" && d.data.name.toLowerCase().includes(searchTerm)) {
+        const matchPrimary = d.data.name.toLowerCase().includes(searchTerm);
+        const matchSpouse = d.data.spouse && d.data.spouse.name.toLowerCase().includes(searchTerm);
+
+        if (searchTerm !== "" && (matchPrimary || matchSpouse)) {
           d.highlighted = true;
           const transform = d3.zoomIdentity
             .translate(width / 2 - d.x, height / 2 - d.y)
@@ -343,6 +390,7 @@ function getSvgWithStyles() {
     .node text.dates { font-size: 11px !important; fill: #7f8c8d !important; }
     .node text.avatar-placeholder { fill: #ffffff !important; }
     .node text.toggle-icon { fill: #7f8c8d !important; }
+    line.marriage-line { stroke: #4A5568 !important; stroke-width: 2px !important; stroke-dasharray: 4 2 !important; }
     path.link { fill: none !important; stroke: #bdc3c7 !important; stroke-width: 2px !important; }
   `;
   svgClone.insertBefore(styleEl, svgClone.firstChild);
@@ -406,7 +454,7 @@ function exportPNG() {
     downloadLink.download = "family_tree.png";
     document.body.appendChild(downloadLink);
     downloadLink.click();
-    document.body.removeChild(downloadLink);
+    downloadLink.removeChild(downloadLink);
     URL.revokeObjectURL(url);
   };
 
