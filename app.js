@@ -76,12 +76,10 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // --- RECURSIVE DATA TRANSFORMER FOR MULTI-SPOUSE ARRAYS ---
+  // --- RECURSIVE DATA TRANSFORMER FOR MULTI-SPOUSE LINKING ---
   function transformMultiSpouseData(data) {
     function processNode(node) {
       let combinedChildren = [];
-
-      // Support both array 'spouses' and legacy single 'spouse'
       const spousesList = node.spouses || (node.spouse ? [node.spouse] : []);
 
       spousesList.forEach((sp, idx) => {
@@ -94,7 +92,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // Include legacy top-level children array if present
       if (node.children) {
         node.children.forEach(child => combinedChildren.push(processNode(child)));
       }
@@ -146,8 +143,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return cardGroup;
   }
 
+  // Calculate horizontal offset for a given spouse index
+  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 40) {
+    if (spousesCount <= 0 || spouseIdx === undefined) return 0;
+    const startX = -((spousesCount - 1) * spacing) / 2;
+    return startX + spouseIdx * spacing;
+  }
+
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 2.5, nodeHeight * 2.8]);
+    .nodeSize([nodeWidth * 2.8, nodeHeight * 2.8]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -171,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nodes.forEach(d => { d.y = d.depth * 340; });
 
-    // Avatar registration
+    // Register image patterns
     nodes.forEach(d => {
       const createPattern = (id, photo) => {
         if (photo && photo !== "assets/photos/placeholder.jpg") {
@@ -206,22 +210,20 @@ document.addEventListener("DOMContentLoaded", () => {
     nodeEnter.each(function(d) {
       const nodeGroup = d3.select(this);
 
-      // 1. Primary Person Card
+      // Primary Person
       drawPersonCard(nodeGroup, d.data, 0, 0);
 
-      // 2. Multi-Spouse Side-by-Side Rendering
+      // Render Spouses
       const spouses = d.data.spousesList || [];
       const totalSpouses = spouses.length;
 
       if (totalSpouses > 0) {
-        const spouseSpacing = nodeWidth + 30;
-        const startX = -((totalSpouses - 1) * spouseSpacing) / 2;
         const spouseOffsetY = photoRadius + 110;
 
         spouses.forEach((spouse, idx) => {
-          const spouseX = startX + idx * spouseSpacing;
+          const spouseX = getSpouseXOffset(totalSpouses, idx);
 
-          // Dashed connection line to spouse
+          // Connection line to spouse
           nodeGroup.append("line")
             .attr("x1", 0)
             .attr("y1", photoRadius + 20)
@@ -231,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("stroke-width", 2)
             .attr("stroke-dasharray", "3 3");
 
-          // SPOUSE label
+          // SPOUSE indicator
           nodeGroup.append("text")
             .attr("x", spouseX)
             .attr("y", spouseOffsetY - photoRadius - 16)
@@ -266,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // Link routing based on parent spouse assignment
+    // Group children by their specific parent spouse so each spouse has a separate horizontal branch line
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
@@ -275,9 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const spouseIdx = d.target.data._parentSpouseIndex;
 
       if (spouses.length > 0 && spouseIdx !== undefined && spouses[spouseIdx]) {
-        const spouseSpacing = nodeWidth + 30;
-        const startX = -((spouses.length - 1) * spouseSpacing) / 2;
-        const spouseX = startX + spouseIdx * spouseSpacing;
+        const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
         return {
           x: d.source.x + spouseX,
           y: d.source.y + photoRadius + 155
@@ -293,12 +293,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return `M ${sPos.x} ${sPos.y} V ${source.y0} H ${sPos.x} V ${source.y0}`;
       });
 
+    // Render individual stepped path branch for each spouse's children set
     link.merge(linkEnter).transition()
       .duration(duration)
       .attr("d", d => {
         const sPos = getLinkSourcePos(d);
         const ty = d.target.y - photoRadius - 10;
-        const midY = sPos.y + (ty - sPos.y) / 2;
+
+        // Midpoint vertical drop directly below the specific spouse
+        const midY = sPos.y + 35;
+
         return `M ${sPos.x} ${sPos.y} V ${midY} H ${d.target.x} V ${ty}`;
       });
 
