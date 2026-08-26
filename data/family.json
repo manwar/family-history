@@ -1,42 +1,92 @@
 {
-  "name": "John Doe",
-  "born": "1890",
-  "died": "1965",
-  "birthplace": "London, UK",
-  "occupation": "Blacksmith",
-  "bio": "John served in WWI before establishing a local blacksmith shop. He was an avid gardener and community organizer.",
+  "name": "Syed Shahid Ahmad",
+  "born": "1947",
+  "died": "2023",
+  "birthplace": "Samastipur, India",
+  "occupation": "Lawyer",
+  "bio": "Unknown",
   "documents": [
     { "title": "1911 Census Record", "url": "#" },
     { "title": "Military Discharge Paper", "url": "#" }
   ],
   "children": [
     {
-      "name": "Jane Doe",
-      "born": "1920",
-      "died": "1995",
-      "birthplace": "Manchester, UK",
-      "occupation": "Teacher",
-      "bio": "Jane was a beloved elementary school teacher for 35 years.",
+      "name": "Tabassum Jamal",
+      "born": "1973",
+      "died": " - ",
+      "birthplace": "Jamshedpur, India",
+      "occupation": "Housewife",
+      "bio": "Unknown",
       "children": [
         {
-          "name": "Alice Smith",
-          "born": "1950",
-          "died": "Present",
-          "occupation": "Architect"
+          "name": "Shakib Ahmad",
+          "born": "1999",
+          "died": " - ",
+          "occupation": "IT Professional"
         },
         {
-          "name": "Bob Smith",
-          "born": "1953",
-          "died": "Present",
-          "occupation": "Engineer"
+          "name": "Mantasha Jamal",
+          "born": "2002",
+          "died": " - ",
+          "occupation": "IT Professional"
+        },
+        {
+          "name": "Muntaha Jamal",
+          "born": "2002",
+          "died": " - ",
+          "occupation": "IT Professional"
         }
       ]
     },
     {
-      "name": "Robert Doe",
-      "born": "1925",
-      "died": "2002",
-      "birthplace": "London, UK"
+      "name": "Mohammad Sajid Anwar",
+      "born": "1975",
+      "died": " - ",
+      "birthplace": "Jamshedpur, India",
+      "occupation": "IT Professional",
+      "bio": "Also known as Pali.",
+      "children": [
+        {
+          "name": "Aairah Bint Mohammad",
+          "born": "2009",
+          "died": " - ",
+          "occupation": "Student"
+        },
+        {
+          "name": "Aabia Bint Mohammad",
+          "born": "2016",
+          "died": " - ",
+          "occupation": "Student"
+        },
+        {
+          "name": "Aania Bint Mohammad",
+          "born": "2016",
+          "died": " - ",
+          "occupation": "Student"
+        }
+      ]
+    },
+    {
+      "name": "Mohammad Khalid Anwar",
+      "born": "1978",
+      "died": " - ",
+      "birthplace": "Jamshedpur, India",
+      "occupation": "IT Professional",
+      "bio": "Also known as Pinkoo.",
+      "children": [
+        {
+          "name": "Aashir",
+          "born": "2013",
+          "died": " - ",
+          "occupation": "Student"
+        },
+        {
+          "name": "Zainab",
+          "born": "2016",
+          "died": " - ",
+          "occupation": "Student"
+        }
+      ]
     }
   ]
 }
