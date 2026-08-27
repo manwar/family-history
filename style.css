@@ -234,3 +234,57 @@ svg text {
   background-color: #1abc9c;
   border-color: #16a085;
 }
+
+/* Mobile Responsive Adjustments */
+@media screen and (max-width: 600px) {
+  /* 1. Compact Header Padding & Text */
+  header {
+    padding: 10px 12px !important;
+  }
+
+  header h1 {
+    font-size: 1.25rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  header p {
+    font-size: 0.75rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* 2. Streamline Search Field & Dropdown */
+  .search-box {
+    max-width: 90% !important;
+    margin: 0 auto !important;
+  }
+
+  .search-box input {
+    padding: 6px 12px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* 3. Side-by-Side Export Buttons */
+  .export-controls {
+    margin-top: 6px !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  .btn-export {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* 4. Keep Floating Zoom Controls In-Bounds Above Mobile Nav Bar */
+  .zoom-controls {
+    bottom: 20px !important;
+    right: 15px !important;
+  }
+
+  .zoom-controls button {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 16px !important;
+  }
+}
