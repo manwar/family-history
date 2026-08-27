@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 1.6, nodeHeight * 1.8]);
+    .nodeSize([nodeWidth * 1.8, nodeHeight * 1.8]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -176,12 +176,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nodes.forEach(d => { d.y = d.depth * 240; });
 
-    // Position children horizontally directly underneath their mother/spouse offset
-    nodes.forEach(d => {
-      if (d.parent && d.parent.data.spousesList && d.parent.data.spousesList.length > 0) {
-        const spouseIdx = d.data._parentSpouseIndex || 0;
-        const spouseX = getSpouseXOffset(d.parent.data.spousesList.length, spouseIdx);
-        d.x = d.parent.x + spouseX;
+    // Align child subtrees beneath their respective mother card without overlapping siblings
+    nodes.forEach(parent => {
+      const spouses = parent.data.spousesList || [];
+      if (spouses.length > 0 && parent.children) {
+        const spouseGroups = new Map();
+
+        parent.children.forEach(child => {
+          const sIdx = child.data._parentSpouseIndex || 0;
+          if (!spouseGroups.has(sIdx)) spouseGroups.set(sIdx, []);
+          spouseGroups.get(sIdx).push(child);
+        });
+
+        spouseGroups.forEach((childrenList, sIdx) => {
+          const spouseTargetX = parent.x + getSpouseXOffset(spouses.length, sIdx);
+          const currentAvgX = d3.mean(childrenList, c => c.x);
+          const shiftX = spouseTargetX - currentAvgX;
+
+          childrenList.forEach(child => {
+            child.descendants().forEach(desc => {
+              desc.x += shiftX;
+            });
+          });
+        });
       }
     });
 
@@ -276,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- DIRECT MOTHER-TO-CHILD LINKS ---
+    // --- ACCURATE PER-SPOUSE LINK PATHS ---
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
@@ -287,7 +304,6 @@ document.addEventListener("DOMContentLoaded", () => {
       let startX = d.source.x;
       let startY = d.source.y + photoRadius + 50;
 
-      // Connect link start point directly to mother/spouse card
       if (spouses.length > 0 && spouses[spouseIdx]) {
         const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
         startX = d.source.x + spouseX;
