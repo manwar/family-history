@@ -1,53 +1,56 @@
 {
-  "name": "Syed Shahid Ahmad",
+  "name": "Shahid Ahmad",
   "born": "1947",
   "died": "2023",
-  "birthplace": "Samastipur, India",
+  "birthplace": "India",
   "occupation": "Lawyer",
-  "bio": "Unknown",
+  "bio": "To be declared...",
   "documents": [
-    { "title": "1911 Census Record", "url": "#" },
-    { "title": "Military Discharge Paper", "url": "#" }
+    { "title": "Test Document 1", "url": "#" },
+    { "title": "Test Document 2", "url": "#" }
   ],
   "spouses": [
     {
       "name": "Firdaus Ahmad",
       "born": "1968",
       "died": "2023",
-      "birthplace": "Darbhanga, India",
+      "birthplace": "India",
       "occupation": "Housewife",
       "children": [
         {
           "name": "Tabassum Jamal",
           "born": "1973",
           "died": "Present",
-          "birthplace": "Jamshedpur, India",
+          "birthplace": "India",
           "occupation": "Housewife",
-          "bio": "Unknown",
+          "bio": "To be declared...",
           "spouses": [
             {
               "name": "Nesar Ahmad",
               "born": "1970",
-              "died": "-",
-              "birthplace": "Hajipur, India",
+              "died": "Present",
+              "birthplace": "India",
               "occupation": "Businessman",
               "children": [
                 {
                   "name": "Shakib Ahmad",
                   "born": "1999",
                   "died": "Present",
+                  "birthplace": "India",
                   "occupation": "IT Professional"
                 },
                 {
                   "name": "Mantasha Tabassum",
                   "born": "2002",
                   "died": "Present",
+                  "birthplace": "India",
                   "occupation": "IT Professional"
                 },
                 {
                   "name": "Muntaha Tabassum",
                   "born": "2002",
                   "died": "Present",
+                  "birthplace": "India",
                   "occupation": "IT Professional"
                 }
               ]
@@ -58,7 +61,7 @@
           "name": "Mohammad Sajid Anwar",
           "born": "1975",
           "died": "Present",
-          "birthplace": "Jamshedpur, India",
+          "birthplace": "India",
           "occupation": "IT Professional",
           "bio": "Also known as Pali.",
           "spouses": [
@@ -66,25 +69,28 @@
               "name": "Ghazala Tabassum",
               "born": "1970",
               "died": "Present",
-              "birthplace": "Bhagalpur, India",
+              "birthplace": "India",
               "occupation": "Housewife",
               "children": [
                 {
                   "name": "Aairah Bint Mohammad",
                   "born": "2009",
                   "died": "Present",
+                  "birthplace": "England",
                   "occupation": "Student"
                 },
                 {
                   "name": "Aabia Bint Mohammad",
                   "born": "2016",
                   "died": "Present",
+                  "birthplace": "England",
                   "occupation": "Student"
                 },
                 {
                   "name": "Aania Bint Mohammad",
                   "born": "2016",
                   "died": "Present",
+                  "birthplace": "England",
                   "occupation": "Student"
                 }
               ]
@@ -95,27 +101,29 @@
           "name": "Mohammad Khalid Anwar",
           "born": "1978",
           "died": "Present",
-          "birthplace": "Jamshedpur, India",
+          "birthplace": "India",
           "occupation": "IT Professional",
           "bio": "Also known as Pinkoo.",
           "spouses": [
             {
-              "name": "Farheen",
+              "name": "Farheen Sadaf",
               "born": "1905",
               "died": "-",
-              "birthplace": "Jamshedpur, India",
+              "birthplace": "India",
               "occupation": "Housewife",
               "children": [
                 {
                   "name": "Aashir",
                   "born": "2013",
                   "died": "Present",
+                  "birthplace": "India",
                   "occupation": "Student"
                 },
                 {
                   "name": "Zainab",
                   "born": "2016",
                   "died": "Present",
+                  "birthplace": "India",
                   "occupation": "Student"
                 }
               ]
@@ -128,32 +136,28 @@
       "name": "Naema Begum",
       "born": "1968",
       "died": "Present",
-      "birthplace": "Jamshedpur, India",
+      "birthplace": "India",
       "occupation": "Houseeife",
       "children": [
         {
           "name": "Shaesta Jamal",
           "born": "1990",
           "died": "Present",
+          "birthplace": "India",
           "occupation": "School Teacher",
           "spouses": [
             {
-              "name": "Spouse Name",
+              "name": "Syed Tausif Hussain",
               "born": "1905",
               "died": "Present",
-              "birthplace": "Jamshedpur, India",
+              "birthplace": "India",
               "occupation": "Manager",
               "children": [
                 {
                   "name": "Child 1",
                   "born": "2013",
                   "died": "Present",
-                  "occupation": "Student"
-                },
-                {
-                  "name": "Child 2",
-                  "born": "2016",
-                  "died": "Present",
+                  "birthplace": "India",
                   "occupation": "Student"
                 }
               ]
@@ -164,25 +168,28 @@
           "name": "Shagufta Jamal",
           "born": "1995",
           "died": "Present",
+          "birthplace": "India",
           "occupation": "Businesswoman",
           "spouses": [
             {
-              "name": "Spouse Name",
+              "name": "Syed Suhaib Ahmad",
               "born": "1995",
               "died": "Present",
-              "birthplace": "Delhi, India",
+              "birthplace": "India",
               "occupation": "Manager",
               "children": [
                 {
-                  "name": "Child 1",
+                  "name": "Sumaira",
                   "born": "2013",
                   "died": "Present",
+                  "birthplace": "India",
                   "occupation": "Student"
                 },
                 {
                   "name": "Child 2",
                   "born": "2016",
                   "died": "Present",
+                  "birthplace": "India",
                   "occupation": "Student"
                 }
               ]
@@ -196,10 +203,10 @@
           "occupation": "Manager",
           "spouses": [
             {
-              "name": "Madiha",
+              "name": "Madiha Jannat",
               "born": "2000",
               "died": "Present",
-              "birthplace": "Jamshedpur, India",
+              "birthplace": "India",
               "occupation": "Housewife",
               "children": []
             }
