@@ -76,28 +76,32 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // --- MULTI-SPOUSE ISOLATED DATA TRANSFORMER ---
+  // --- RECURSIVE TRANSFORMER WITH VIRTUAL SPOUSE BRANCHES ---
   function transformMultiSpouseData(data) {
     function processNode(node) {
       const spousesList = node.spouses || (node.spouse ? [node.spouse] : []);
-      let combinedChildren = [];
+      let virtualChildren = [];
 
-      spousesList.forEach((sp, idx) => {
-        sp.spouseId = `spouse-${++idCounter}`;
-        if (sp.children) {
-          sp.children.forEach(child => {
-            child._parentSpouseIndex = idx;
-            combinedChildren.push(processNode(child));
+      if (spousesList.length > 0) {
+        spousesList.forEach((sp, idx) => {
+          sp.spouseId = `spouse-${++idCounter}`;
+          const spouseChildren = (sp.children || []).map(child => processNode(child));
+
+          // Create a virtual container for each spouse branch so d3.tree calculates independent X bounds
+          virtualChildren.push({
+            isVirtualSpouseBranch: true,
+            spouseData: sp,
+            spouseIdx: idx,
+            totalSpouses: spousesList.length,
+            children: spouseChildren.length > 0 ? spouseChildren : null
           });
-        }
-      });
-
-      if (node.children) {
-        node.children.forEach(child => combinedChildren.push(processNode(child)));
+        });
+      } else if (node.children) {
+        virtualChildren = node.children.map(child => processNode(child));
       }
 
       node.spousesList = spousesList;
-      node.children = combinedChildren.length > 0 ? combinedChildren : null;
+      node.children = virtualChildren.length > 0 ? virtualChildren : null;
       return node;
     }
     return processNode(data);
@@ -150,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 1.8, nodeHeight * 2.0]);
+    .nodeSize([nodeWidth * 1.6, nodeHeight * 1.8]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -169,15 +173,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- UPDATE TREE ---
   function update(source) {
     const treeData = treeLayout(root);
-    const nodes = treeData.descendants();
-    const links = treeData.links();
+
+    // Filter out virtual nodes from visual rendering but keep hierarchy coords
+    const allDescendants = treeData.descendants();
+    const realNodes = allDescendants.filter(d => !d.data.isVirtualSpouseBranch);
 
     const spouseOffsetY = photoRadius + 110;
 
-    nodes.forEach(d => { d.y = d.depth * 260; });
+    realNodes.forEach(d => {
+      d.y = d.depth * 220;
+    });
 
     // Register image patterns
-    nodes.forEach(d => {
+    realNodes.forEach(d => {
       const createPattern = (id, photo) => {
         if (photo && photo !== "assets/photos/placeholder.jpg") {
           const patternId = `avatar-pattern-${id}`;
@@ -202,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const node = g.selectAll("g.node")
-      .data(nodes, d => d.id || (d.id = ++idCounter));
+      .data(realNodes, d => d.id || (d.id = ++idCounter));
 
     const nodeEnter = node.enter().append("g")
       .attr("class", "node")
@@ -267,58 +275,44 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- SEPARATED BRANCH LINK DRAWING ---
-    // Group children per spouse so each spouse has its own independent horizontal connector bar
-    const groupedLinks = [];
-    const spouseChildrenMap = new Map();
+    // --- ACCURATE PER-SPOUSE LINK CONNECTIONS ---
+    const linkData = [];
 
-    links.forEach(l => {
-      const parentId = l.source.id;
-      const spouseIdx = l.target.data._parentSpouseIndex || 0;
-      const key = `${parentId}-${spouseIdx}`;
+    allDescendants.forEach(d => {
+      if (d.data.isVirtualSpouseBranch && d.children) {
+        const parentNode = d.parent;
+        const spouseData = d.data.spouseData;
+        const spouseIdx = d.data.spouseIdx;
+        const totalSpouses = d.data.totalSpouses;
 
-      if (!spouseChildrenMap.has(key)) {
-        spouseChildrenMap.set(key, []);
-      }
-      spouseChildrenMap.get(key).push(l);
-    });
+        const spouseX = parentNode.x + getSpouseXOffset(totalSpouses, spouseIdx);
+        const spouseY = parentNode.y + spouseOffsetY;
 
-    spouseChildrenMap.forEach((spouseLinks) => {
-      const firstLink = spouseLinks[0];
-      const spouses = firstLink.source.data.spousesList || [];
-      const spouseIdx = firstLink.target.data._parentSpouseIndex || 0;
+        const startX = spouseX;
+        const startY = spouseY + photoRadius + 45;
+        const midY = startY + 20;
 
-      let startX = firstLink.source.x;
-      let startY = firstLink.source.y + photoRadius + 50;
+        const childrenX = d.children.map(c => c.x);
+        const minX = Math.min(...childrenX);
+        const maxX = Math.max(...childrenX);
 
-      if (spouses.length > 0 && spouses[spouseIdx]) {
-        const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
-        startX = firstLink.source.x + spouseX;
-        startY = firstLink.source.y + spouseOffsetY + photoRadius + 45;
-      }
-
-      const midY = startY + 20;
-
-      const childXCoords = spouseLinks.map(l => l.target.x);
-      const minX = Math.min(...childXCoords);
-      const maxX = Math.max(...childXCoords);
-
-      spouseLinks.forEach(l => {
-        groupedLinks.push({
-          link: l,
-          startX,
-          startY,
-          midY,
-          minX,
-          maxX,
-          targetX: l.target.x,
-          targetY: l.target.y - photoRadius
+        d.children.forEach(child => {
+          linkData.push({
+            id: `${spouseData.spouseId}-${child.id}`,
+            startX,
+            startY,
+            midY,
+            minX,
+            maxX,
+            targetX: child.x,
+            targetY: child.y - photoRadius
+          });
         });
-      });
+      }
     });
 
     const link = g.selectAll("path.link")
-      .data(groupedLinks, d => d.link.target.id);
+      .data(linkData, d => d.id);
 
     const linkEnter = link.enter().insert("path", "g")
       .attr("class", "link")
@@ -327,7 +321,6 @@ document.addEventListener("DOMContentLoaded", () => {
     link.merge(linkEnter).transition()
       .duration(duration)
       .attr("d", d => {
-        // Renders vertical line down from parent spouse, horizontal bar capped strictly within that spouse's children, and vertical lines down to each child
         return `M ${d.startX} ${d.startY} V ${d.midY} M ${d.minX} ${d.midY} H ${d.maxX} M ${d.targetX} ${d.midY} V ${d.targetY}`;
       });
 
@@ -336,7 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("d", d => `M ${d.startX} ${d.startY} V ${d.startY} H ${d.targetX} V ${d.targetY}`)
       .remove();
 
-    nodes.forEach(d => {
+    realNodes.forEach(d => {
       d.x0 = d.x;
       d.y0 = d.y;
     });
