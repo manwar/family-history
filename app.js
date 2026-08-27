@@ -59,12 +59,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!rootData) return;
 
     const treeWidth = rootData._subtreeWidth || 0;
-    const x = width / 2 - treeWidth / 2;
-    const y = 80;
+
+    // Detect mobile viewport to calculate initial scale and offsets accurately
+    const currentContainerWidth = container.clientWidth || width;
+    const isMobile = currentContainerWidth <= 600;
+    const initialScale = isMobile ? 0.65 : 1.0;
+
+    const x = (currentContainerWidth / 2) - (treeWidth * initialScale / 2);
+    const y = isMobile ? 40 : 80;
 
     const transform = d3.zoomIdentity
       .translate(x, y)
-      .scale(1);
+      .scale(initialScale);
 
     if (transitionDuration > 0) {
       svg.transition().duration(transitionDuration).call(zoom.transform, transform);
@@ -312,8 +318,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Target center coordinates
     const scale = 1.2;
-    const targetX = -node.x * scale + width / 2;
-    const targetY = -node.y * scale + height / 3;
+    const currentWidth = container.clientWidth || width;
+    const currentHeight = container.clientHeight || height;
+    const targetX = -node.x * scale + currentWidth / 2;
+    const targetY = -node.y * scale + currentHeight / 3;
 
     svg.transition()
       .duration(750)
@@ -339,7 +347,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderTree();
     setupSearch();
-    centerTree(0); // Center landing view on whole tree
+
+    // Ensure rendering dimensions calculate correctly before auto-centering
+    requestAnimationFrame(() => {
+      centerTree(0);
+    });
   }).catch(error => {
     console.error("Error loading family tree data:", error);
   });
