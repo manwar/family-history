@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let rootData;
   let idCounter = 0;
+  let allNodesData = [];
 
   const svg = d3.select("#tree-container")
     .append("svg")
@@ -20,12 +21,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const defs = svg.append("defs");
 
+  // Highlight Drop-shadow Filter
+  const filter = defs.append("filter")
+    .attr("id", "glow")
+    .attr("x", "-50%")
+    .attr("y", "-50%")
+    .attr("width", "200%")
+    .attr("height", "200%");
+  filter.append("feGaussianBlur")
+    .attr("stdDeviation", "6")
+    .attr("result", "coloredBlur");
+  const feMerge = filter.append("feMerge");
+  feMerge.append("feMergeNode").attr("in", "coloredBlur");
+  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
   svg.append("rect")
     .attr("width", "100%")
     .attr("height", "100%")
     .attr("fill", "none")
     .attr("pointer-events", "all")
-    .on("click", () => closeDrawer());
+    .on("click", () => {
+      closeDrawer();
+      clearHighlights();
+    });
 
   const g = svg.append("g");
 
@@ -36,15 +54,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   svg.call(zoom);
 
-  const initialTransform = d3.zoomIdentity
-    .translate(width / 2, 80)
-    .scale(1);
+  // Helper to center the tree horizontally relative to container width
+  function centerTree(transitionDuration = 0) {
+    if (!rootData) return;
 
-  svg.call(zoom.transform, initialTransform);
+    const treeWidth = rootData._subtreeWidth || 0;
+    const x = width / 2 - treeWidth / 2;
+    const y = 80;
+
+    const transform = d3.zoomIdentity
+      .translate(x, y)
+      .scale(1);
+
+    if (transitionDuration > 0) {
+      svg.transition().duration(transitionDuration).call(zoom.transform, transform);
+    } else {
+      svg.call(zoom.transform, transform);
+    }
+  }
 
   document.getElementById("zoom-in")?.addEventListener("click", () => svg.transition().duration(300).call(zoom.scaleBy, 1.3));
   document.getElementById("zoom-out")?.addEventListener("click", () => svg.transition().duration(300).call(zoom.scaleBy, 0.7));
-  document.getElementById("zoom-reset")?.addEventListener("click", () => svg.transition().duration(500).call(zoom.transform, initialTransform));
+  document.getElementById("zoom-reset")?.addEventListener("click", () => {
+    clearHighlights();
+    centerTree(500);
+  });
   document.getElementById("export-svg")?.addEventListener("click", exportSVG);
   document.getElementById("export-png")?.addEventListener("click", exportPNG);
   document.getElementById("close-drawer")?.addEventListener("click", () => closeDrawer());
@@ -160,8 +194,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function drawPersonCard(containerGroup, personData, x, y) {
+    const cardId = personData.id || personData.spouseId;
     const cardGroup = containerGroup.append("g")
       .attr("class", "person-card")
+      .attr("id", `card-${cardId}`)
       .attr("transform", `translate(${x}, ${y})`)
       .style("cursor", "pointer")
       .on("click", (event) => {
@@ -173,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("cx", 0)
       .attr("cy", 0)
       .attr("r", photoRadius)
-      .style("fill", (personData.photo && personData.photo !== "assets/photos/placeholder.jpg") ? `url(#avatar-pattern-${personData.id || personData.spouseId})` : "#e2e8f0")
+      .style("fill", (personData.photo && personData.photo !== "assets/photos/placeholder.jpg") ? `url(#avatar-pattern-${cardId})` : "#e2e8f0")
       .style("stroke", "#ffffff")
       .style("stroke-width", "3px");
 
@@ -199,6 +235,102 @@ document.addEventListener("DOMContentLoaded", () => {
     return cardGroup;
   }
 
+  // --- SEARCH ENGINE & HIGHLIGHTING ---
+  function setupSearch() {
+    const searchInput = document.getElementById("node-search");
+    const searchResults = document.getElementById("search-results");
+
+    if (!searchInput || !searchResults) return;
+
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      searchResults.innerHTML = "";
+
+      if (!query) {
+        searchResults.classList.add("hidden");
+        clearHighlights();
+        return;
+      }
+
+      const matches = allNodesData.filter(n =>
+        n.data.name && n.data.name.toLowerCase().includes(query)
+      );
+
+      if (matches.length === 0) {
+        searchResults.classList.add("hidden");
+        return;
+      }
+
+      searchResults.classList.remove("hidden");
+      matches.forEach(match => {
+        const li = document.createElement("li");
+        li.className = "search-result-item";
+        li.style.padding = "8px 12px";
+        li.style.cursor = "pointer";
+        li.textContent = match.data.name;
+        li.addEventListener("click", () => {
+          focusOnNode(match);
+          // Hide and clear results completely
+          searchResults.classList.add("hidden");
+          searchResults.innerHTML = "";
+          searchInput.value = match.data.name;
+        });
+        searchResults.appendChild(li);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add("hidden");
+        searchResults.innerHTML = "";
+      }
+    });
+  }
+
+  function focusOnNode(node) {
+    clearHighlights();
+
+    const targetId = node.data.id || node.data.spouseId;
+    const card = g.select(`#card-${targetId}`);
+
+    if (!card.empty()) {
+      // Highlight circle border with color and glow
+      card.select("circle")
+        .transition()
+        .duration(300)
+        .style("stroke", "#ff5722")
+        .style("stroke-width", "6px")
+        .attr("filter", "url(#glow)");
+
+      // Highlight text color
+      card.select("text.name")
+        .transition()
+        .duration(300)
+        .style("fill", "#ff5722")
+        .style("font-weight", "800");
+    }
+
+    // Target center coordinates
+    const scale = 1.2;
+    const targetX = -node.x * scale + width / 2;
+    const targetY = -node.y * scale + height / 3;
+
+    svg.transition()
+      .duration(750)
+      .call(zoom.transform, d3.zoomIdentity.translate(targetX, targetY).scale(scale));
+  }
+
+  function clearHighlights() {
+    g.selectAll(".person-card circle")
+      .style("stroke", "#ffffff")
+      .style("stroke-width", "3px")
+      .attr("filter", null);
+
+    g.selectAll(".person-card text.name")
+      .style("fill", "#2d3748")
+      .style("font-weight", "600");
+  }
+
   // --- RENDER ---
   d3.json("data/family.json").then(rawData => {
     rootData = prepareData(rawData);
@@ -206,6 +338,8 @@ document.addEventListener("DOMContentLoaded", () => {
     layoutNode(rootData, 0, 0);
 
     renderTree();
+    setupSearch();
+    centerTree(0); // Center landing view on whole tree
   }).catch(error => {
     console.error("Error loading family tree data:", error);
   });
@@ -246,6 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     collect(rootData);
+    allNodesData = allNodes;
 
     // Register Patterns
     allNodes.forEach(n => {
@@ -290,7 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .text("SPOUSE ❤️");
     });
 
-    // 2. Draw Separate Child Trees Per Mother (Exact top attachment, no tick overshoot)
+    // 2. Draw Separate Child Trees Per Mother (Exact top attachment)
     spouseBranchGroups.forEach(group => {
       const startX = group.motherX;
       const startY = group.motherY + photoRadius + 45;
