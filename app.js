@@ -54,19 +54,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   svg.call(zoom);
 
-  // Helper to center the tree horizontally relative to container width
+  // Helper to center the tree dynamically based on actual SVG rendered bounds
   function centerTree(transitionDuration = 0) {
     if (!rootData) return;
 
-    const treeWidth = rootData._subtreeWidth || 0;
+    // Force recalculation of live container measurements
+    const svgNode = svg.node();
+    const rect = svgNode ? svgNode.getBoundingClientRect() : null;
+    const currentWidth = rect && rect.width ? rect.width : (container.clientWidth || width);
+    const isMobile = currentWidth <= 600;
 
-    // Detect mobile viewport to calculate initial scale and offsets accurately
-    const currentContainerWidth = container.clientWidth || width;
-    const isMobile = currentContainerWidth <= 600;
+    // Retrieve exact tree group SVG element bounding dimensions
+    const gNode = g.node();
+    if (!gNode) return;
+    const gBounds = gNode.getBBox();
+    if (gBounds.width === 0 || gBounds.height === 0) return;
+
+    // Initial scale selection based on device viewport
     const initialScale = isMobile ? 0.65 : 1.0;
 
-    const x = (currentContainerWidth / 2) - (treeWidth * initialScale / 2);
-    const y = isMobile ? 40 : 80;
+    // Calculate center coordinates directly using live bounding dimensions
+    const x = (currentWidth / 2) - (gBounds.x + gBounds.width / 2) * initialScale;
+    const y = isMobile ? 30 : 60;
 
     const transform = d3.zoomIdentity
       .translate(x, y)
@@ -348,9 +357,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTree();
     setupSearch();
 
-    // Ensure rendering dimensions calculate correctly before auto-centering
+    // Double-frame delay ensures SVG elements are drawn before measuring bounding boxes
     requestAnimationFrame(() => {
-      centerTree(0);
+      requestAnimationFrame(() => {
+        centerTree(0);
+      });
     });
   }).catch(error => {
     console.error("Error loading family tree data:", error);
