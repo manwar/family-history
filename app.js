@@ -3,12 +3,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const width = container.clientWidth;
   const height = container.clientHeight;
 
-  const nodeWidth = 140;
-  const nodeHeight = 160;
+  const cardWidth = 140;
   const photoRadius = 35;
+  const spouseGap = 200;
+  const siblingGap = 160;
+  const levelGap = 260;
   const duration = 400;
 
-  let root;
+  let rootData;
   let idCounter = 0;
 
   const svg = d3.select("#tree-container")
@@ -29,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- ZOOM BEHAVIOR ---
   const zoom = d3.zoom()
-    .scaleExtent([0.3, 2.5])
+    .scaleExtent([0.15, 2.5])
     .on("zoom", (event) => g.attr("transform", event.transform));
 
   svg.call(zoom);
@@ -76,37 +78,91 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // --- DATA TRANSFORMER ---
-  function transformMultiSpouseData(data) {
-    function processNode(node) {
-      let combinedChildren = [];
-      const spousesList = node.spouses || (node.spouse ? [node.spouse] : []);
+  // --- RECURSIVE DATA PREPARATION ---
+  function prepareData(node) {
+    node.id = node.id || ++idCounter;
+    node.spousesList = node.spouses || (node.spouse ? [node.spouse] : []);
 
-      spousesList.forEach((sp, idx) => {
-        sp.spouseId = `spouse-${++idCounter}`;
-        if (sp.children) {
-          sp.children.forEach(child => {
-            child._parentSpouseIndex = idx;
-            combinedChildren.push(processNode(child));
-          });
-        }
+    node.spouseBranches = [];
+
+    node.spousesList.forEach((sp, idx) => {
+      sp.spouseId = sp.spouseId || `spouse-${++idCounter}`;
+      const children = (sp.children || []).map(child => prepareData(child));
+      node.spouseBranches.push({
+        spouse: sp,
+        spouseIdx: idx,
+        children: children
       });
+    });
 
-      if (node.children) {
-        node.children.forEach(child => combinedChildren.push(processNode(child)));
-      }
-
-      node.spousesList = spousesList;
-      node.children = combinedChildren.length > 0 ? combinedChildren : null;
-      return node;
-    }
-    return processNode(data);
+    return node;
   }
 
-  function drawPersonCard(containerGroup, personData, offsetX, offsetY) {
+  // --- BOUNDING-BOX LAYOUT ENGINE ---
+  function computeSubtreeBounds(node) {
+    if (!node.spouseBranches || node.spouseBranches.length === 0) {
+      node._subtreeWidth = cardWidth;
+      return cardWidth;
+    }
+
+    let totalBranchesWidth = 0;
+
+    node.spouseBranches.forEach(branch => {
+      let childrenTotalWidth = 0;
+      if (branch.children && branch.children.length > 0) {
+        branch.children.forEach(child => {
+          childrenTotalWidth += computeSubtreeBounds(child);
+        });
+        childrenTotalWidth += (branch.children.length - 1) * siblingGap;
+      } else {
+        childrenTotalWidth = cardWidth;
+      }
+
+      branch._width = Math.max(cardWidth, childrenTotalWidth);
+      totalBranchesWidth += branch._width;
+    });
+
+    totalBranchesWidth += (node.spouseBranches.length - 1) * spouseGap;
+    node._subtreeWidth = Math.max(cardWidth, totalBranchesWidth);
+    return node._subtreeWidth;
+  }
+
+  function layoutNode(node, leftX, y) {
+    node.y = y;
+
+    if (!node.spouseBranches || node.spouseBranches.length === 0) {
+      node.x = leftX + node._subtreeWidth / 2;
+      return;
+    }
+
+    const primaryCenter = leftX + node._subtreeWidth / 2;
+    node.x = primaryCenter;
+
+    let currentBranchLeft = leftX;
+
+    node.spouseBranches.forEach((branch) => {
+      const branchCenter = currentBranchLeft + branch._width / 2;
+      const spouseY = y + photoRadius + 90;
+
+      branch.spouse.x = branchCenter;
+      branch.spouse.y = spouseY;
+
+      if (branch.children && branch.children.length > 0) {
+        let currentChildLeft = currentBranchLeft;
+        branch.children.forEach(child => {
+          layoutNode(child, currentChildLeft, y + levelGap);
+          currentChildLeft += child._subtreeWidth + siblingGap;
+        });
+      }
+
+      currentBranchLeft += branch._width + spouseGap;
+    });
+  }
+
+  function drawPersonCard(containerGroup, personData, x, y) {
     const cardGroup = containerGroup.append("g")
       .attr("class", "person-card")
-      .attr("transform", `translate(${offsetX}, ${offsetY})`)
+      .attr("transform", `translate(${x}, ${y})`)
       .style("cursor", "pointer")
       .on("click", (event) => {
         event.stopPropagation();
@@ -143,205 +199,137 @@ document.addEventListener("DOMContentLoaded", () => {
     return cardGroup;
   }
 
-  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 30) {
-    if (spousesCount <= 0 || spouseIdx === undefined) return 0;
-    const startX = -((spousesCount - 1) * spacing) / 2;
-    return startX + spouseIdx * spacing;
-  }
-
-  const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 1.8, nodeHeight * 1.8]);
-
-  // --- LOAD DATA ---
+  // --- RENDER ---
   d3.json("data/family.json").then(rawData => {
-    const preparedData = transformMultiSpouseData(rawData);
-    root = d3.hierarchy(preparedData);
-    root.x0 = 0;
-    root.y0 = 0;
+    rootData = prepareData(rawData);
+    computeSubtreeBounds(rootData);
+    layoutNode(rootData, 0, 0);
 
-    root.descendants().forEach(d => { d.id = ++idCounter; });
-
-    update(root);
+    renderTree();
   }).catch(error => {
     console.error("Error loading family tree data:", error);
   });
 
-  // --- UPDATE TREE ---
-  function update(source) {
-    const treeData = treeLayout(root);
-    const nodes = treeData.descendants();
-    const links = treeData.links();
+  function renderTree() {
+    g.selectAll("*").remove();
 
-    const spouseOffsetY = photoRadius + 110;
+    const allNodes = [];
+    const spouseConnections = [];
+    const spouseBranchGroups = [];
 
-    nodes.forEach(d => { d.y = d.depth * 240; });
+    function collect(node) {
+      allNodes.push({ data: node, x: node.x, y: node.y, type: 'primary' });
 
-    // Align child subtrees beneath their respective mother card without overlapping siblings
-    nodes.forEach(parent => {
-      const spouses = parent.data.spousesList || [];
-      if (spouses.length > 0 && parent.children) {
-        const spouseGroups = new Map();
+      (node.spouseBranches || []).forEach(branch => {
+        const sp = branch.spouse;
+        allNodes.push({ data: sp, x: sp.x, y: sp.y, type: 'spouse' });
 
-        parent.children.forEach(child => {
-          const sIdx = child.data._parentSpouseIndex || 0;
-          if (!spouseGroups.has(sIdx)) spouseGroups.set(sIdx, []);
-          spouseGroups.get(sIdx).push(child);
+        spouseConnections.push({
+          x1: node.x,
+          y1: node.y + photoRadius,
+          x2: sp.x,
+          y2: sp.y - photoRadius,
+          labelX: (node.x + sp.x) / 2,
+          labelY: (node.y + photoRadius + sp.y - photoRadius) / 2
         });
 
-        spouseGroups.forEach((childrenList, sIdx) => {
-          const spouseTargetX = parent.x + getSpouseXOffset(spouses.length, sIdx);
-          const currentAvgX = d3.mean(childrenList, c => c.x);
-          const shiftX = spouseTargetX - currentAvgX;
-
-          childrenList.forEach(child => {
-            child.descendants().forEach(desc => {
-              desc.x += shiftX;
-            });
+        if (branch.children && branch.children.length > 0) {
+          spouseBranchGroups.push({
+            motherX: sp.x,
+            motherY: sp.y,
+            children: branch.children
           });
-        });
-      }
-    });
 
-    // Register image patterns
-    nodes.forEach(d => {
-      const createPattern = (id, photo) => {
-        if (photo && photo !== "assets/photos/placeholder.jpg") {
-          const patternId = `avatar-pattern-${id}`;
-          if (defs.select(`#${patternId}`).empty()) {
-            defs.append("pattern")
-              .attr("id", patternId)
-              .attr("height", 1)
-              .attr("width", 1)
-              .append("image")
-              .attr("x", 0)
-              .attr("y", 0)
-              .attr("height", photoRadius * 2)
-              .attr("width", photoRadius * 2)
-              .attr("preserveAspectRatio", "xMidYMid slice")
-              .attr("xlink:href", photo);
-          }
+          branch.children.forEach(child => collect(child));
         }
-      };
+      });
+    }
 
-      createPattern(d.id, d.data.photo);
-      (d.data.spousesList || []).forEach(sp => createPattern(sp.spouseId, sp.photo));
-    });
+    collect(rootData);
 
-    const node = g.selectAll("g.node")
-      .data(nodes, d => d.id || (d.id = ++idCounter));
-
-    const nodeEnter = node.enter().append("g")
-      .attr("class", "node")
-      .attr("transform", () => `translate(${source.x0}, ${source.y0})`);
-
-    nodeEnter.each(function(d) {
-      const nodeGroup = d3.select(this);
-
-      // Primary Person
-      drawPersonCard(nodeGroup, d.data, 0, 0);
-
-      // Render Spouses
-      const spouses = d.data.spousesList || [];
-      const totalSpouses = spouses.length;
-
-      if (totalSpouses > 0) {
-        spouses.forEach((spouse, idx) => {
-          const spouseX = getSpouseXOffset(totalSpouses, idx);
-
-          // Connection line to spouse
-          nodeGroup.append("line")
-            .attr("x1", 0)
-            .attr("y1", photoRadius + 20)
-            .attr("x2", spouseX)
-            .attr("y2", spouseOffsetY - photoRadius - 6)
-            .attr("stroke", "#cbd5e0")
-            .attr("stroke-width", 2)
-            .attr("stroke-dasharray", "3 3");
-
-          // SPOUSE indicator
-          nodeGroup.append("text")
-            .attr("x", spouseX)
-            .attr("y", spouseOffsetY - photoRadius - 16)
-            .attr("text-anchor", "middle")
-            .style("font-size", "10px")
-            .style("font-style", "italic")
-            .style("fill", "#718096")
-            .text("SPOUSE ❤️");
-
-          drawPersonCard(nodeGroup, spouse, spouseX, spouseOffsetY);
-
-          if (spouse.children && spouse.children.length > 0) {
-            nodeGroup.append("text")
-              .attr("x", spouseX)
-              .attr("y", spouseOffsetY + photoRadius + 32)
-              .attr("text-anchor", "middle")
-              .style("font-size", "10px")
-              .style("font-style", "italic")
-              .style("fill", "#718096")
-              .text("CHILDREN");
-          }
-        });
+    // Register Patterns
+    allNodes.forEach(n => {
+      const p = n.data;
+      const id = p.id || p.spouseId;
+      if (p.photo && p.photo !== "assets/photos/placeholder.jpg") {
+        const patternId = `avatar-pattern-${id}`;
+        if (defs.select(`#${patternId}`).empty()) {
+          defs.append("pattern")
+            .attr("id", patternId)
+            .attr("height", 1)
+            .attr("width", 1)
+            .append("image")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("height", photoRadius * 2)
+            .attr("width", photoRadius * 2)
+            .attr("preserveAspectRatio", "xMidYMid slice")
+            .attr("xlink:href", p.photo);
+        }
       }
     });
 
-    node.merge(nodeEnter).transition()
-      .duration(duration)
-      .attr("transform", d => `translate(${d.x}, ${d.y})`);
+    // 1. Draw Marriage Lines
+    spouseConnections.forEach(conn => {
+      g.append("line")
+        .attr("x1", conn.x1)
+        .attr("y1", conn.y1)
+        .attr("x2", conn.x2)
+        .attr("y2", conn.y2)
+        .attr("stroke", "#cbd5e0")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "3 3");
 
-    node.exit().transition()
-      .duration(duration)
-      .attr("transform", () => `translate(${source.x}, ${source.y})`)
-      .remove();
+      g.append("text")
+        .attr("x", conn.labelX)
+        .attr("y", conn.labelY)
+        .attr("text-anchor", "middle")
+        .style("font-size", "10px")
+        .style("font-style", "italic")
+        .style("fill", "#718096")
+        .text("SPOUSE ❤️");
+    });
 
-    // --- ACCURATE PER-SPOUSE LINK PATHS ---
-    const link = g.selectAll("path.link")
-      .data(links, d => d.target.id);
+    // 2. Draw Separate Child Trees Per Mother (Exact top attachment, no tick overshoot)
+    spouseBranchGroups.forEach(group => {
+      const startX = group.motherX;
+      const startY = group.motherY + photoRadius + 45;
+      const midY = startY + 25;
 
-    const getLinkPoints = (d) => {
-      const spouses = d.source.data.spousesList || [];
-      const spouseIdx = d.target.data._parentSpouseIndex || 0;
+      const childrenX = group.children.map(c => c.x);
+      const minX = Math.min(...childrenX);
+      const maxX = Math.max(...childrenX);
 
-      let startX = d.source.x;
-      let startY = d.source.y + photoRadius + 50;
+      // Line straight down from mother
+      g.append("path")
+        .attr("class", "link")
+        .attr("d", `M ${startX} ${startY} V ${midY}`)
+        .attr("fill", "none")
+        .attr("stroke", "#cbd5e0")
+        .attr("stroke-width", 2);
 
-      if (spouses.length > 0 && spouses[spouseIdx]) {
-        const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
-        startX = d.source.x + spouseX;
-        startY = d.source.y + spouseOffsetY + photoRadius + 45;
-      }
+      // Horizontal line covering ONLY her children
+      g.append("path")
+        .attr("class", "link")
+        .attr("d", `M ${minX} ${midY} H ${maxX}`)
+        .attr("fill", "none")
+        .attr("stroke", "#cbd5e0")
+        .attr("stroke-width", 2);
 
-      const targetX = d.target.x;
-      const targetY = d.target.y - photoRadius;
-      const midY = startY + 20;
-
-      return { startX, startY, midY, targetX, targetY };
-    };
-
-    const linkEnter = link.enter().insert("path", "g")
-      .attr("class", "link")
-      .attr("d", () => {
-        const p = getLinkPoints({ source: source, target: source });
-        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
+      // Vertical line stopping precisely at circle boundary
+      group.children.forEach(child => {
+        g.append("path")
+          .attr("class", "link")
+          .attr("d", `M ${child.x} ${midY} V ${child.y - photoRadius}`)
+          .attr("fill", "none")
+          .attr("stroke", "#cbd5e0")
+          .attr("stroke-width", 2);
       });
+    });
 
-    link.merge(linkEnter).transition()
-      .duration(duration)
-      .attr("d", d => {
-        const p = getLinkPoints(d);
-        return `M ${p.startX} ${p.startY} V ${p.midY} H ${p.targetX} V ${p.targetY}`;
-      });
-
-    link.exit().transition()
-      .duration(duration)
-      .attr("d", () => {
-        const p = getLinkPoints({ source: source, target: source });
-        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
-      })
-      .remove();
-
-    nodes.forEach(d => {
-      d.x0 = d.x;
-      d.y0 = d.y;
+    // 3. Draw Person Cards
+    allNodes.forEach(n => {
+      drawPersonCard(g, n.data, n.x, n.y);
     });
   }
 });
