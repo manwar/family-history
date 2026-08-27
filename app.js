@@ -76,32 +76,28 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // --- RECURSIVE TRANSFORMER WITH VIRTUAL SPOUSE BRANCHES ---
+  // --- DATA TRANSFORMER ---
   function transformMultiSpouseData(data) {
     function processNode(node) {
+      let combinedChildren = [];
       const spousesList = node.spouses || (node.spouse ? [node.spouse] : []);
-      let virtualChildren = [];
 
-      if (spousesList.length > 0) {
-        spousesList.forEach((sp, idx) => {
-          sp.spouseId = `spouse-${++idCounter}`;
-          const spouseChildren = (sp.children || []).map(child => processNode(child));
-
-          // Create a virtual container for each spouse branch so d3.tree calculates independent X bounds
-          virtualChildren.push({
-            isVirtualSpouseBranch: true,
-            spouseData: sp,
-            spouseIdx: idx,
-            totalSpouses: spousesList.length,
-            children: spouseChildren.length > 0 ? spouseChildren : null
+      spousesList.forEach((sp, idx) => {
+        sp.spouseId = `spouse-${++idCounter}`;
+        if (sp.children) {
+          sp.children.forEach(child => {
+            child._parentSpouseIndex = idx;
+            combinedChildren.push(processNode(child));
           });
-        });
-      } else if (node.children) {
-        virtualChildren = node.children.map(child => processNode(child));
+        }
+      });
+
+      if (node.children) {
+        node.children.forEach(child => combinedChildren.push(processNode(child)));
       }
 
       node.spousesList = spousesList;
-      node.children = virtualChildren.length > 0 ? virtualChildren : null;
+      node.children = combinedChildren.length > 0 ? combinedChildren : null;
       return node;
     }
     return processNode(data);
@@ -173,19 +169,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- UPDATE TREE ---
   function update(source) {
     const treeData = treeLayout(root);
-
-    // Filter out virtual nodes from visual rendering but keep hierarchy coords
-    const allDescendants = treeData.descendants();
-    const realNodes = allDescendants.filter(d => !d.data.isVirtualSpouseBranch);
+    const nodes = treeData.descendants();
+    const links = treeData.links();
 
     const spouseOffsetY = photoRadius + 110;
 
-    realNodes.forEach(d => {
-      d.y = d.depth * 220;
+    nodes.forEach(d => { d.y = d.depth * 240; });
+
+    // Position children horizontally directly underneath their mother/spouse offset
+    nodes.forEach(d => {
+      if (d.parent && d.parent.data.spousesList && d.parent.data.spousesList.length > 0) {
+        const spouseIdx = d.data._parentSpouseIndex || 0;
+        const spouseX = getSpouseXOffset(d.parent.data.spousesList.length, spouseIdx);
+        d.x = d.parent.x + spouseX;
+      }
     });
 
     // Register image patterns
-    realNodes.forEach(d => {
+    nodes.forEach(d => {
       const createPattern = (id, photo) => {
         if (photo && photo !== "assets/photos/placeholder.jpg") {
           const patternId = `avatar-pattern-${id}`;
@@ -210,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const node = g.selectAll("g.node")
-      .data(realNodes, d => d.id || (d.id = ++idCounter));
+      .data(nodes, d => d.id || (d.id = ++idCounter));
 
     const nodeEnter = node.enter().append("g")
       .attr("class", "node")
@@ -275,61 +276,54 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- ACCURATE PER-SPOUSE LINK CONNECTIONS ---
-    const linkData = [];
-
-    allDescendants.forEach(d => {
-      if (d.data.isVirtualSpouseBranch && d.children) {
-        const parentNode = d.parent;
-        const spouseData = d.data.spouseData;
-        const spouseIdx = d.data.spouseIdx;
-        const totalSpouses = d.data.totalSpouses;
-
-        const spouseX = parentNode.x + getSpouseXOffset(totalSpouses, spouseIdx);
-        const spouseY = parentNode.y + spouseOffsetY;
-
-        const startX = spouseX;
-        const startY = spouseY + photoRadius + 45;
-        const midY = startY + 20;
-
-        const childrenX = d.children.map(c => c.x);
-        const minX = Math.min(...childrenX);
-        const maxX = Math.max(...childrenX);
-
-        d.children.forEach(child => {
-          linkData.push({
-            id: `${spouseData.spouseId}-${child.id}`,
-            startX,
-            startY,
-            midY,
-            minX,
-            maxX,
-            targetX: child.x,
-            targetY: child.y - photoRadius
-          });
-        });
-      }
-    });
-
+    // --- DIRECT MOTHER-TO-CHILD LINKS ---
     const link = g.selectAll("path.link")
-      .data(linkData, d => d.id);
+      .data(links, d => d.target.id);
+
+    const getLinkPoints = (d) => {
+      const spouses = d.source.data.spousesList || [];
+      const spouseIdx = d.target.data._parentSpouseIndex || 0;
+
+      let startX = d.source.x;
+      let startY = d.source.y + photoRadius + 50;
+
+      // Connect link start point directly to mother/spouse card
+      if (spouses.length > 0 && spouses[spouseIdx]) {
+        const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
+        startX = d.source.x + spouseX;
+        startY = d.source.y + spouseOffsetY + photoRadius + 45;
+      }
+
+      const targetX = d.target.x;
+      const targetY = d.target.y - photoRadius;
+      const midY = startY + 20;
+
+      return { startX, startY, midY, targetX, targetY };
+    };
 
     const linkEnter = link.enter().insert("path", "g")
       .attr("class", "link")
-      .attr("d", d => `M ${d.startX} ${d.startY} V ${d.startY} H ${d.targetX} V ${d.targetY}`);
+      .attr("d", () => {
+        const p = getLinkPoints({ source: source, target: source });
+        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
+      });
 
     link.merge(linkEnter).transition()
       .duration(duration)
       .attr("d", d => {
-        return `M ${d.startX} ${d.startY} V ${d.midY} M ${d.minX} ${d.midY} H ${d.maxX} M ${d.targetX} ${d.midY} V ${d.targetY}`;
+        const p = getLinkPoints(d);
+        return `M ${p.startX} ${p.startY} V ${p.midY} H ${p.targetX} V ${p.targetY}`;
       });
 
     link.exit().transition()
       .duration(duration)
-      .attr("d", d => `M ${d.startX} ${d.startY} V ${d.startY} H ${d.targetX} V ${d.targetY}`)
+      .attr("d", () => {
+        const p = getLinkPoints({ source: source, target: source });
+        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
+      })
       .remove();
 
-    realNodes.forEach(d => {
+    nodes.forEach(d => {
       d.x0 = d.x;
       d.y0 = d.y;
     });
