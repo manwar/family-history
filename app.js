@@ -143,14 +143,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return cardGroup;
   }
 
-  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 80) {
+  // Tightened spouse horizontal offset spacing from nodeWidth + 80 down to nodeWidth + 20
+  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 20) {
     if (spousesCount <= 0 || spouseIdx === undefined) return 0;
     const startX = -((spousesCount - 1) * spacing) / 2;
     return startX + spouseIdx * spacing;
   }
 
+  // Tightened tree layout dimensions to bring horizontal nodes drastically closer
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 3.5, nodeHeight * 3.2]);
+    .nodeSize([nodeWidth * 1.5, nodeHeight * 2.0]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -174,9 +176,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const spouseOffsetY = photoRadius + 110;
 
-    nodes.forEach(d => { d.y = d.depth * 380; });
+    // Reduced depth vertical distance from 380 down to 260
+    nodes.forEach(d => { d.y = d.depth * 260; });
 
-    // Align child node positions directly beneath their respective spouse offset
+    // Position children directly beneath their parent's specific spouse position offset
     nodes.forEach(d => {
       if (d.parent && d.parent.data.spousesList && d.parent.data.spousesList.length > 0) {
         const spouseIdx = d.data._parentSpouseIndex || 0;
@@ -276,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- INDEPENDENT BRANCH LINK DRAWING ---
+    // --- LINK DRAWING ---
     const link = g.selectAll("path.link")
       .data(links, d => d.target.id);
 
@@ -296,7 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetX = d.target.x;
       const targetY = d.target.y - photoRadius - 10;
 
-      const midY = startY + 30;
+      const midY = startY + 20;
 
       return { startX, startY, midY, targetX, targetY };
     };
