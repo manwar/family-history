@@ -4,12 +4,16 @@
   padding: 0;
 }
 
-body {
+html, body {
+  height: 100%;
+  height: -webkit-fill-available;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #f4f7f6;
   color: #333;
   overflow: hidden;
-  height: 100vh;
+}
+
+body {
   display: flex;
   flex-direction: column;
 }
@@ -36,6 +40,7 @@ header p {
   flex: 1;
   width: 100%;
   height: 100%;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
   position: relative;
 }
 
@@ -75,10 +80,11 @@ svg text {
   -webkit-user-select: none;
 }
 
-/* Header Search */
+/* Header Search & Buttons */
 .search-box {
   margin-top: 8px;
 }
+
 .search-box input {
   padding: 6px 12px;
   border-radius: 20px;
@@ -88,16 +94,34 @@ svg text {
   outline: none;
 }
 
-/* Floating Controls */
+.btn-export {
+  background-color: #34495e;
+  color: #ffffff;
+  border: 1px solid #7f8c8d;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin: 0 4px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-export:hover {
+  background-color: #1abc9c;
+  border-color: #16a085;
+}
+
+/* Floating Zoom Controls */
 .zoom-controls {
-  position: absolute;
-  bottom: 20px;
+  position: fixed;
+  bottom: 24px;
   right: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   z-index: 100;
 }
+
 .zoom-controls button {
   width: 40px;
   height: 40px;
@@ -111,45 +135,12 @@ svg text {
   box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   transition: transform 0.1s ease;
 }
+
 .zoom-controls button:active {
   transform: scale(0.9);
 }
 
-/* Slide-out Drawer */
-.drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 320px;
-  height: 100%;
-  background: #fff;
-  box-shadow: -3px 0 10px rgba(0,0,0,0.15);
-  z-index: 200;
-  padding: 24px;
-  transition: transform 0.3s ease-in-out;
-  overflow-y: auto;
-}
-.drawer.hidden {
-  transform: translateX(100%);
-}
-.close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-}
-.drawer-content img {
-  width: 100%;
-  max-height: 200px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-
-/* Drawer Container */
+/* Slide-out Detail Drawer */
 .drawer {
   position: fixed;
   top: 0;
@@ -218,49 +209,33 @@ svg text {
   text-decoration: underline;
 }
 
-.btn-export {
-  background-color: #34495e;
-  color: #ffffff;
-  border: 1px solid #7f8c8d;
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  margin: 0 4px;
-  transition: background-color 0.2s ease;
-}
-
-.btn-export:hover {
-  background-color: #1abc9c;
-  border-color: #16a085;
-}
-
 /* Mobile Responsive Adjustments */
 @media screen and (max-width: 600px) {
   /* 1. Compact Header Padding & Text */
   header {
-    padding: 10px 12px !important;
+    padding: 8px 10px !important;
   }
 
   header h1 {
-    font-size: 1.25rem !important;
+    font-size: 1.2rem !important;
     margin-bottom: 2px !important;
   }
 
   header p {
-    font-size: 0.75rem !important;
-    margin-bottom: 8px !important;
+    font-size: 0.7rem !important;
+    margin-bottom: 6px !important;
   }
 
-  /* 2. Streamline Search Field & Dropdown */
+  /* 2. Streamline Search Field */
   .search-box {
     max-width: 90% !important;
     margin: 0 auto !important;
   }
 
   .search-box input {
-    padding: 6px 12px !important;
+    padding: 5px 10px !important;
     font-size: 0.85rem !important;
+    width: 100% !important;
   }
 
   /* 3. Side-by-Side Export Buttons */
@@ -276,15 +251,22 @@ svg text {
     font-size: 0.75rem !important;
   }
 
-  /* 4. Keep Floating Zoom Controls In-Bounds Above Mobile Nav Bar */
+  /* 4. Safe Area Positioning for Floating Zoom Controls */
   .zoom-controls {
-    bottom: 20px !important;
-    right: 15px !important;
+    position: fixed !important;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 16px !important;
   }
 
   .zoom-controls button {
-    width: 36px !important;
-    height: 36px !important;
+    width: 38px !important;
+    height: 38px !important;
     font-size: 16px !important;
+  }
+
+  /* 5. Mobile Drawer Adjustments */
+  .drawer {
+    width: 85% !important;
+    padding: 16px !important;
   }
 }
