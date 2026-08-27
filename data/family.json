@@ -39,13 +39,13 @@
                   "occupation": "IT Professional"
                 },
                 {
-                  "name": "Mantasha Jamal",
+                  "name": "Mantasha Tabassum",
                   "born": "2002",
                   "died": "Present",
                   "occupation": "IT Professional"
                 },
                 {
-                  "name": "Muntaha Jamal",
+                  "name": "Muntaha Tabassum",
                   "born": "2002",
                   "died": "Present",
                   "occupation": "IT Professional"
@@ -168,7 +168,7 @@
           "spouses": [
             {
               "name": "Spouse Name",
-              "born": "1905",
+              "born": "1995",
               "died": "Present",
               "birthplace": "Delhi, India",
               "occupation": "Manager",
@@ -196,8 +196,8 @@
           "occupation": "Manager",
           "spouses": [
             {
-              "name": "Spouse Name",
-              "born": "1905",
+              "name": "Madiha",
+              "born": "2000",
               "died": "Present",
               "birthplace": "Jamshedpur, India",
               "occupation": "Housewife",
