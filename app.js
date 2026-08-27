@@ -76,11 +76,11 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer.classList.remove("hidden");
   }
 
-  // --- RECURSIVE DATA TRANSFORMER ---
+  // --- MULTI-SPOUSE ISOLATED DATA TRANSFORMER ---
   function transformMultiSpouseData(data) {
     function processNode(node) {
-      let combinedChildren = [];
       const spousesList = node.spouses || (node.spouse ? [node.spouse] : []);
+      let combinedChildren = [];
 
       spousesList.forEach((sp, idx) => {
         sp.spouseId = `spouse-${++idCounter}`;
@@ -143,14 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return cardGroup;
   }
 
-  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 20) {
+  function getSpouseXOffset(spousesCount, spouseIdx, spacing = nodeWidth + 30) {
     if (spousesCount <= 0 || spouseIdx === undefined) return 0;
     const startX = -((spousesCount - 1) * spacing) / 2;
     return startX + spouseIdx * spacing;
   }
 
   const treeLayout = d3.tree()
-    .nodeSize([nodeWidth * 1.5, nodeHeight * 2.0]);
+    .nodeSize([nodeWidth * 1.8, nodeHeight * 2.0]);
 
   // --- LOAD DATA ---
   d3.json("data/family.json").then(rawData => {
@@ -175,14 +175,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const spouseOffsetY = photoRadius + 110;
 
     nodes.forEach(d => { d.y = d.depth * 260; });
-
-    nodes.forEach(d => {
-      if (d.parent && d.parent.data.spousesList && d.parent.data.spousesList.length > 0) {
-        const spouseIdx = d.data._parentSpouseIndex || 0;
-        const spouseOffset = getSpouseXOffset(d.parent.data.spousesList.length, spouseIdx);
-        d.x = d.x + spouseOffset;
-      }
-    });
 
     // Register image patterns
     nodes.forEach(d => {
@@ -275,52 +267,73 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("transform", () => `translate(${source.x}, ${source.y})`)
       .remove();
 
-    // --- LINK DRAWING WITH CLEAN CONNECTIONS ---
-    const link = g.selectAll("path.link")
-      .data(links, d => d.target.id);
+    // --- SEPARATED BRANCH LINK DRAWING ---
+    // Group children per spouse so each spouse has its own independent horizontal connector bar
+    const groupedLinks = [];
+    const spouseChildrenMap = new Map();
 
-    const getLinkPoints = (d) => {
-      const spouses = d.source.data.spousesList || [];
-      const spouseIdx = d.target.data._parentSpouseIndex || 0;
+    links.forEach(l => {
+      const parentId = l.source.id;
+      const spouseIdx = l.target.data._parentSpouseIndex || 0;
+      const key = `${parentId}-${spouseIdx}`;
 
-      let startX = d.source.x;
-      let startY = d.source.y + photoRadius + 50;
+      if (!spouseChildrenMap.has(key)) {
+        spouseChildrenMap.set(key, []);
+      }
+      spouseChildrenMap.get(key).push(l);
+    });
+
+    spouseChildrenMap.forEach((spouseLinks) => {
+      const firstLink = spouseLinks[0];
+      const spouses = firstLink.source.data.spousesList || [];
+      const spouseIdx = firstLink.target.data._parentSpouseIndex || 0;
+
+      let startX = firstLink.source.x;
+      let startY = firstLink.source.y + photoRadius + 50;
 
       if (spouses.length > 0 && spouses[spouseIdx]) {
         const spouseX = getSpouseXOffset(spouses.length, spouseIdx);
-        startX = d.source.x + spouseX;
-        startY = d.source.y + spouseOffsetY + photoRadius + 45;
+        startX = firstLink.source.x + spouseX;
+        startY = firstLink.source.y + spouseOffsetY + photoRadius + 45;
       }
-
-      const targetX = d.target.x;
-      // Terminate connection cleanly directly at the top circle border
-      const targetY = d.target.y - photoRadius;
 
       const midY = startY + 20;
 
-      return { startX, startY, midY, targetX, targetY };
-    };
+      const childXCoords = spouseLinks.map(l => l.target.x);
+      const minX = Math.min(...childXCoords);
+      const maxX = Math.max(...childXCoords);
+
+      spouseLinks.forEach(l => {
+        groupedLinks.push({
+          link: l,
+          startX,
+          startY,
+          midY,
+          minX,
+          maxX,
+          targetX: l.target.x,
+          targetY: l.target.y - photoRadius
+        });
+      });
+    });
+
+    const link = g.selectAll("path.link")
+      .data(groupedLinks, d => d.link.target.id);
 
     const linkEnter = link.enter().insert("path", "g")
       .attr("class", "link")
-      .attr("d", () => {
-        const p = getLinkPoints({ source: source, target: source });
-        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
-      });
+      .attr("d", d => `M ${d.startX} ${d.startY} V ${d.startY} H ${d.targetX} V ${d.targetY}`);
 
     link.merge(linkEnter).transition()
       .duration(duration)
       .attr("d", d => {
-        const p = getLinkPoints(d);
-        return `M ${p.startX} ${p.startY} V ${p.midY} H ${p.targetX} V ${p.targetY}`;
+        // Renders vertical line down from parent spouse, horizontal bar capped strictly within that spouse's children, and vertical lines down to each child
+        return `M ${d.startX} ${d.startY} V ${d.midY} M ${d.minX} ${d.midY} H ${d.maxX} M ${d.targetX} ${d.midY} V ${d.targetY}`;
       });
 
     link.exit().transition()
       .duration(duration)
-      .attr("d", () => {
-        const p = getLinkPoints({ source: source, target: source });
-        return `M ${p.startX} ${p.startY} V ${p.startY} H ${p.startX} V ${p.startY}`;
-      })
+      .attr("d", d => `M ${d.startX} ${d.startY} V ${d.startY} H ${d.targetX} V ${d.targetY}`)
       .remove();
 
     nodes.forEach(d => {
