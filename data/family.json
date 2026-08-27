@@ -134,7 +134,7 @@
     },
     {
       "name": "Nayeema Ahmad",
-      "born": "1968",
+      "born": "1965",
       "died": "Present",
       "birthplace": "India",
       "occupation": "Houseeife",
@@ -148,14 +148,14 @@
           "spouses": [
             {
               "name": "Syed Tausif Hussain",
-              "born": "1905",
+              "born": "1904",
               "died": "Present",
               "birthplace": "India",
-              "occupation": "Manager",
+              "occupation": "Quality Control MBA",
               "children": [
                 {
-                  "name": "Child 1",
-                  "born": "2013",
+                  "name": "Syed Hamza Hussain",
+                  "born": "2021",
                   "died": "Present",
                   "birthplace": "India",
                   "occupation": "Student"
@@ -166,28 +166,28 @@
         },
         {
           "name": "Shagufta Jamal",
-          "born": "1995",
+          "born": "1992",
           "died": "Present",
           "birthplace": "India",
           "occupation": "Businesswoman",
           "spouses": [
             {
               "name": "Syed Suhaib Ahmad",
-              "born": "1995",
+              "born": "1989",
               "died": "Present",
               "birthplace": "India",
               "occupation": "Manager",
               "children": [
                 {
                   "name": "Sumaira",
-                  "born": "2013",
+                  "born": "2021",
                   "died": "Present",
                   "birthplace": "India",
                   "occupation": "Student"
                 },
                 {
                   "name": "Syed Abdul Samad",
-                  "born": "2016",
+                  "born": "2023",
                   "died": "Present",
                   "birthplace": "India",
                   "occupation": "Student"
@@ -198,13 +198,13 @@
         },
         {
           "name": "Majid Anwar",
-          "born": "1997",
+          "born": "1994",
           "died": "Present",
           "occupation": "Manager",
           "spouses": [
             {
               "name": "Madiha Jannat",
-              "born": "2000",
+              "born": "2001",
               "died": "Present",
               "birthplace": "India",
               "occupation": "Housewife",
