@@ -287,6 +287,12 @@ document.addEventListener("DOMContentLoaded", () => {
           searchResults.classList.add("hidden");
           searchResults.innerHTML = "";
           searchInput.value = match.data.name;
+          // Dismiss the on-screen keyboard on mobile: position:fixed
+          // elements (the zoom controls) can end up hidden behind/under
+          // it while it's open, since fixed positioning tracks the
+          // layout viewport rather than the visually-shrunk one on most
+          // mobile browsers.
+          searchInput.blur();
         });
         searchResults.appendChild(li);
       });
@@ -296,6 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
         searchResults.classList.add("hidden");
         searchResults.innerHTML = "";
+        searchInput.blur();
       }
     });
   }
