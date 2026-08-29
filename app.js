@@ -280,8 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
       matches.forEach(match => {
         const li = document.createElement("li");
         li.className = "search-result-item";
-        li.style.padding = "8px 12px";
-        li.style.cursor = "pointer";
         li.textContent = match.data.name;
         li.addEventListener("click", () => {
           focusOnNode(match);

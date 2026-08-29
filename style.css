@@ -48,6 +48,16 @@ header p {
   cursor: grabbing;
 }
 
+/* d3.zoom() is bound directly to this <svg> (see app.js: svg.call(zoom)).
+   Without touch-action:none here, a single-finger drag to pan the tree
+   fights the browser's own native scroll/pull-to-refresh gesture on
+   mobile, and pinch-to-zoom can trigger the page's own zoom instead of
+   (or in addition to) d3's -- this is the main reason panning/zooming
+   the tree itself feels broken or unresponsive on a touch device. */
+#tree-container svg {
+  touch-action: none;
+}
+
 /* D3 Tree Node Styling */
 .node rect {
   fill: #ffffff;
@@ -83,6 +93,7 @@ svg text {
 /* Header Search & Buttons */
 .search-box {
   margin-top: 8px;
+  position: relative;
 }
 
 .search-box input {
@@ -92,6 +103,48 @@ svg text {
   width: 220px;
   font-size: 14px;
   outline: none;
+}
+
+/* Search Results Dropdown */
+.search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-height: 280px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  list-style: none;
+  z-index: 50;
+  text-align: left;
+}
+
+.search-results.hidden {
+  display: none;
+}
+
+.search-result-item {
+  padding: 12px 14px;
+  min-height: 44px; /* touch target */
+  display: flex;
+  align-items: center;
+  color: #2c3e50;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover,
+.search-result-item:active {
+  background-color: #f4f7f6;
 }
 
 .btn-export {
@@ -104,6 +157,7 @@ svg text {
   cursor: pointer;
   margin: 0 4px;
   transition: background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn-export:hover {
@@ -134,6 +188,7 @@ svg text {
   cursor: pointer;
   box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   transition: transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .zoom-controls button:active {
@@ -147,12 +202,14 @@ svg text {
   right: 0;
   width: 340px;
   height: 100%;
+  height: 100dvh;
   background: #ffffff;
   box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15);
   z-index: 200;
   padding: 24px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .drawer.hidden {
@@ -161,13 +218,19 @@ svg text {
 
 .close-btn {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   font-size: 24px;
   color: #7f8c8d;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .close-btn:hover {
@@ -247,7 +310,7 @@ svg text {
   }
 
   .btn-export {
-    padding: 4px 10px !important;
+    padding: 8px 12px !important;
     font-size: 0.75rem !important;
   }
 
@@ -259,9 +322,9 @@ svg text {
   }
 
   .zoom-controls button {
-    width: 38px !important;
-    height: 38px !important;
-    font-size: 16px !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
   }
 
   /* 5. Mobile Drawer Adjustments */
