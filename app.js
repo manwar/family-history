@@ -19,6 +19,40 @@ document.addEventListener("DOMContentLoaded", () => {
     .attr("width", "100%")
     .attr("height", "100%");
 
+  // Keep the floating zoom controls above mobile browser chrome (Safari's
+  // collapsible bottom toolbar, the on-screen keyboard). CSS
+  // `position: fixed; bottom: 24px` alone isn't reliable for this: several
+  // mobile browsers anchor fixed elements to a viewport that doesn't
+  // shrink for keyboard/toolbar changes, so the controls can end up
+  // rendered behind that chrome instead of above it. The VisualViewport
+  // API reports the actual currently-visible area and fires a resize
+  // event whenever either the keyboard or the toolbar changes, so this
+  // recalculates the real gap and applies it as an inline offset on top
+  // of the existing CSS `bottom` value.
+  (function initZoomControlsViewportOffset() {
+    const zoomControls = document.querySelector(".zoom-controls");
+    if (!zoomControls || !window.visualViewport) return;
+
+    const baseBottom = 24; // matches style.css's .zoom-controls bottom
+
+    function updateOffset() {
+      const vv = window.visualViewport;
+      const chromeOffset = window.innerHeight - (vv.height + vv.offsetTop);
+      // Uses setProperty(..., "important") since style.css's mobile media
+      // query sets this same property with !important -- a plain inline
+      // style would otherwise be silently overridden by that rule.
+      zoomControls.style.setProperty(
+        "bottom",
+        `calc(${Math.max(chromeOffset, 0)}px + ${baseBottom}px + env(safe-area-inset-bottom, 0px))`,
+        "important"
+      );
+    }
+
+    window.visualViewport.addEventListener("resize", updateOffset);
+    window.visualViewport.addEventListener("scroll", updateOffset);
+    updateOffset();
+  })();
+
   const defs = svg.append("defs");
 
   // Highlight Drop-shadow Filter
