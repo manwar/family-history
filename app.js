@@ -24,34 +24,62 @@ document.addEventListener("DOMContentLoaded", () => {
   // `position: fixed; bottom: 24px` alone isn't reliable for this: several
   // mobile browsers anchor fixed elements to a viewport that doesn't
   // shrink for keyboard/toolbar changes, so the controls can end up
-  // rendered behind that chrome instead of above it. The VisualViewport
-  // API reports the actual currently-visible area and fires a resize
-  // event whenever either the keyboard or the toolbar changes, so this
-  // recalculates the real gap and applies it as an inline offset on top
-  // of the existing CSS `bottom` value.
+  // rendered behind that chrome instead of above it.
+  //
+  // This anchors the controls directly to the REAL bottom edge of the
+  // currently-visible area (visualViewport.offsetTop + visualViewport.height),
+  // switching from `bottom` to an explicit `top` -- deliberately not
+  // comparing against window.innerHeight (an earlier version of this fix
+  // did), since window.innerHeight is known to shrink alongside the
+  // visual viewport on some iOS Safari versions, which would make that
+  // comparison always evaluate to ~0 and silently no-op the whole fix.
   (function initZoomControlsViewportOffset() {
     const zoomControls = document.querySelector(".zoom-controls");
     if (!zoomControls || !window.visualViewport) return;
 
-    const baseBottom = 24; // matches style.css's .zoom-controls bottom
+    const gap = 24; // desired gap above the visible bottom edge
 
     function updateOffset() {
       const vv = window.visualViewport;
-      const chromeOffset = window.innerHeight - (vv.height + vv.offsetTop);
-      // Uses setProperty(..., "important") since style.css's mobile media
-      // query sets this same property with !important -- a plain inline
-      // style would otherwise be silently overridden by that rule.
-      zoomControls.style.setProperty(
-        "bottom",
-        `calc(${Math.max(chromeOffset, 0)}px + ${baseBottom}px + env(safe-area-inset-bottom, 0px))`,
-        "important"
-      );
+      const controlsHeight = zoomControls.offsetHeight || 150;
+      const visibleBottomEdge = vv.offsetTop + vv.height;
+      const top = visibleBottomEdge - controlsHeight - gap;
+
+      zoomControls.style.setProperty("position", "fixed", "important");
+      zoomControls.style.setProperty("top", `${top}px`, "important");
+      zoomControls.style.setProperty("bottom", "auto", "important");
+
+      updateDebugReadout(vv, controlsHeight, top);
     }
 
     window.visualViewport.addEventListener("resize", updateOffset);
     window.visualViewport.addEventListener("scroll", updateOffset);
-    updateOffset();
+    window.addEventListener("orientationchange", updateOffset);
+    requestAnimationFrame(updateOffset);
   })();
+
+  // TEMPORARY -- remove once the zoom-controls positioning is confirmed
+  // fixed. Shows the live numbers the fix above is actually using, so a
+  // screenshot from a real device gives real data instead of guesswork.
+  function updateDebugReadout(vv, controlsHeight, top) {
+    let el = document.getElementById("vv-debug");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "vv-debug";
+      el.style.cssText = "position:fixed;top:4px;left:4px;z-index:9999;" +
+        "background:rgba(0,0,0,0.75);color:#0f0;font:11px monospace;" +
+        "padding:6px 8px;border-radius:4px;white-space:pre;pointer-events:none;";
+      document.body.appendChild(el);
+    }
+    el.textContent =
+      `innerHeight: ${window.innerHeight}\n` +
+      `vv.height: ${vv.height.toFixed(1)}\n` +
+      `vv.offsetTop: ${vv.offsetTop.toFixed(1)}\n` +
+      `controlsHeight: ${controlsHeight}\n` +
+      `computed top: ${top.toFixed(1)}`;
+  }
+
+
 
   const defs = svg.append("defs");
 
