@@ -33,50 +33,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // did), since window.innerHeight is known to shrink alongside the
   // visual viewport on some iOS Safari versions, which would make that
   // comparison always evaluate to ~0 and silently no-op the whole fix.
-  // TEMPORARY -- remove once the "controls vanish after search-select" bug
-  // is confirmed fixed. Logs a timestamped line every time updateOffset()
-  // actually runs, plus a snapshot right when a search result is tapped
-  // and again ~1.5s later, so we can see whether the recalculation is
-  // firing at all after a search-select and what values it's producing.
-  function zcDebugLog(label) {
-    let panel = document.getElementById("zc-debug");
-    if (!panel) {
-      panel = document.createElement("div");
-      panel.id = "zc-debug";
-      panel.style.cssText = "position:fixed;top:4px;left:4px;right:4px;z-index:2147483647;" +
-        "background:rgba(0,0,0,0.92);color:#0f0;font:8px monospace;" +
-        "padding:4px 6px;border-radius:4px;white-space:pre-wrap;word-break:break-all;" +
-        "max-height:16vh;overflow:hidden;pointer-events:none;" +
-        "border:1px solid #0f0;";
-      document.body.appendChild(panel);
-    }
-    const zoomControls = document.querySelector(".zoom-controls");
-    const vv = window.visualViewport;
-    const entryLines = [`[${label}]`];
-    if (vv) entryLines.push(`vv:h${vv.height.toFixed(0)}/t${vv.offsetTop.toFixed(0)} w${vv.width.toFixed(0)}/l${vv.offsetLeft.toFixed(0)} scale:${vv.scale.toFixed(2)}`);
-    if (zoomControls) {
-      const r = zoomControls.getBoundingClientRect();
-      const cs = window.getComputedStyle(zoomControls);
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const atPoint = document.elementFromPoint(cx, cy);
-      const atPointDesc = atPoint
-        ? `${atPoint.tagName.toLowerCase()}${atPoint.id ? "#" + atPoint.id : ""}${atPoint.className ? "." + String(atPoint.className).slice(0, 15) : ""}`
-        : "NONE(offscreen)";
-      entryLines.push(`rect:y${r.top.toFixed(0)}-${r.bottom.toFixed(0)} x${r.left.toFixed(0)}-${r.right.toFixed(0)} disp:${cs.display} vis:${cs.visibility}`);
-      entryLines.push(`op:${cs.opacity} z:${cs.zIndex} pe:${cs.pointerEvents}`);
-      entryLines.push(`>> atCenter: ${atPointDesc}`);
-    } else {
-      entryLines.push(`zoomControls NOT FOUND IN DOM`);
-    }
-    const prevEntries = panel.dataset.entries ? JSON.parse(panel.dataset.entries) : [];
-    prevEntries.push(entryLines.join("\n"));
-    while (prevEntries.length > 1) prevEntries.shift();
-    panel.dataset.entries = JSON.stringify(prevEntries);
-    panel.textContent = prevEntries.join("\n---\n");
-  }
-  window.zcDebugLog = zcDebugLog;
-
+  //
+  // Also disables native pinch-zoom of the page (see the viewport meta tag
+  // in index.html): a native browser pinch/pan shifts the visible slice of
+  // the page independently of this calculation and was the root cause of
+  // the controls ending up positioned outside the visible area after a
+  // search-select, in a way that didn't resolve on its own over time.
   (function initZoomControlsViewportOffset() {
     const zoomControls = document.querySelector(".zoom-controls");
     if (!zoomControls || !window.visualViewport) return;
@@ -85,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let settleTimer1 = null;
     let settleTimer2 = null;
 
-    function applyOffset(label) {
+    function applyOffset() {
       const vv = window.visualViewport;
       const controlsHeight = zoomControls.offsetHeight || 150;
       const visibleBottomEdge = vv.offsetTop + vv.height;
@@ -94,26 +56,22 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomControls.style.setProperty("position", "fixed", "important");
       zoomControls.style.setProperty("top", `${top}px`, "important");
       zoomControls.style.setProperty("bottom", "auto", "important");
-
-      zcDebugLog(`${label} top:${top.toFixed(0)}`);
     }
 
     function updateOffset() {
       // Immediate, optimistic update for responsiveness.
-      applyOffset("updateOffset(immediate)");
+      applyOffset();
 
       // iOS animates browser-chrome/keyboard transitions over several
       // hundred ms and can fire 'resize'/'scroll' mid-transition, so a
       // position computed from the very first event in a burst may be
-      // based on a viewport size that hasn't settled yet (confirmed via
-      // the debug log: rect looked in-bounds by our own math, but
-      // elementFromPoint at that exact point found nothing on-screen).
-      // Re-run using a fresh reading shortly after the last event in the
-      // burst, and once more a bit later to catch slower transitions.
+      // based on a viewport size that hasn't settled yet. Re-run using a
+      // fresh reading shortly after the last event in the burst, and once
+      // more a bit later to catch slower transitions.
       clearTimeout(settleTimer1);
       clearTimeout(settleTimer2);
-      settleTimer1 = setTimeout(() => applyOffset("updateOffset(+180ms settle)"), 180);
-      settleTimer2 = setTimeout(() => applyOffset("updateOffset(+500ms settle)"), 500);
+      settleTimer1 = setTimeout(applyOffset, 180);
+      settleTimer2 = setTimeout(applyOffset, 500);
     }
 
     window.visualViewport.addEventListener("resize", updateOffset);
@@ -385,7 +343,6 @@ document.addEventListener("DOMContentLoaded", () => {
         li.className = "search-result-item";
         li.textContent = match.data.name;
         li.addEventListener("click", () => {
-          if (window.zcDebugLog) window.zcDebugLog("click (before)");
           focusOnNode(match);
           // Hide and clear results completely
           searchResults.classList.add("hidden");
@@ -397,12 +354,6 @@ document.addEventListener("DOMContentLoaded", () => {
           // layout viewport rather than the visually-shrunk one on most
           // mobile browsers.
           searchInput.blur();
-          if (window.zcDebugLog) {
-            window.zcDebugLog("blur (immediately after)");
-            setTimeout(() => window.zcDebugLog("+400ms"), 400);
-            setTimeout(() => window.zcDebugLog("+1000ms"), 1000);
-            setTimeout(() => window.zcDebugLog("+2000ms (transition done)"), 2000);
-          }
         });
         searchResults.appendChild(li);
       });
