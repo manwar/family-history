@@ -33,6 +33,41 @@ document.addEventListener("DOMContentLoaded", () => {
   // did), since window.innerHeight is known to shrink alongside the
   // visual viewport on some iOS Safari versions, which would make that
   // comparison always evaluate to ~0 and silently no-op the whole fix.
+  // TEMPORARY -- remove once the "controls vanish after search-select" bug
+  // is confirmed fixed. Logs a timestamped line every time updateOffset()
+  // actually runs, plus a snapshot right when a search result is tapped
+  // and again ~1.5s later, so we can see whether the recalculation is
+  // firing at all after a search-select and what values it's producing.
+  function zcDebugLog(label) {
+    let panel = document.getElementById("zc-debug");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "zc-debug";
+      panel.style.cssText = "position:fixed;top:4px;left:4px;z-index:2147483647;" +
+        "background:rgba(0,0,0,0.85);color:#0f0;font:9px monospace;" +
+        "padding:6px 8px;border-radius:4px;white-space:pre;pointer-events:none;" +
+        "max-width:96vw;max-height:60vh;overflow:hidden;";
+      document.body.appendChild(panel);
+    }
+    const zoomControls = document.querySelector(".zoom-controls");
+    const vv = window.visualViewport;
+    let line = `[${label}] `;
+    if (vv) line += `vv.h:${vv.height.toFixed(0)} vv.top:${vv.offsetTop.toFixed(0)} `;
+    if (zoomControls) {
+      const r = zoomControls.getBoundingClientRect();
+      const cs = window.getComputedStyle(zoomControls);
+      line += `rect:t${r.top.toFixed(0)}/b${r.bottom.toFixed(0)} css-top:${cs.top} disp:${cs.display} vis:${cs.visibility}`;
+    } else {
+      line += `zoomControls NOT FOUND IN DOM`;
+    }
+    const lines = (panel.dataset.lines ? panel.dataset.lines.split("\n") : []);
+    lines.push(line);
+    while (lines.length > 14) lines.shift();
+    panel.dataset.lines = lines.join("\n");
+    panel.textContent = lines.join("\n");
+  }
+  window.zcDebugLog = zcDebugLog;
+
   (function initZoomControlsViewportOffset() {
     const zoomControls = document.querySelector(".zoom-controls");
     if (!zoomControls || !window.visualViewport) return;
@@ -48,6 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomControls.style.setProperty("position", "fixed", "important");
       zoomControls.style.setProperty("top", `${top}px`, "important");
       zoomControls.style.setProperty("bottom", "auto", "important");
+
+      zcDebugLog(`updateOffset ch:${controlsHeight} top:${top.toFixed(0)}`);
     }
 
     window.visualViewport.addEventListener("resize", updateOffset);
@@ -319,6 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
         li.className = "search-result-item";
         li.textContent = match.data.name;
         li.addEventListener("click", () => {
+          if (window.zcDebugLog) window.zcDebugLog("click (before)");
           focusOnNode(match);
           // Hide and clear results completely
           searchResults.classList.add("hidden");
@@ -330,6 +368,12 @@ document.addEventListener("DOMContentLoaded", () => {
           // layout viewport rather than the visually-shrunk one on most
           // mobile browsers.
           searchInput.blur();
+          if (window.zcDebugLog) {
+            window.zcDebugLog("blur (immediately after)");
+            setTimeout(() => window.zcDebugLog("+400ms"), 400);
+            setTimeout(() => window.zcDebugLog("+1000ms"), 1000);
+            setTimeout(() => window.zcDebugLog("+2000ms (transition done)"), 2000);
+          }
         });
         searchResults.appendChild(li);
       });
