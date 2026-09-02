@@ -44,15 +44,16 @@ document.addEventListener("DOMContentLoaded", () => {
       panel = document.createElement("div");
       panel.id = "zc-debug";
       panel.style.cssText = "position:fixed;top:4px;left:4px;right:4px;z-index:2147483647;" +
-        "background:rgba(0,0,0,0.9);color:#0f0;font:9px monospace;" +
+        "background:rgba(0,0,0,0.92);color:#0f0;font:9px monospace;" +
         "padding:6px 8px;border-radius:4px;white-space:pre-wrap;word-break:break-all;" +
-        "pointer-events:none;max-height:55vh;overflow-y:auto;";
+        "max-height:70vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;" +
+        "border:1px solid #0f0;";
       document.body.appendChild(panel);
     }
     const zoomControls = document.querySelector(".zoom-controls");
     const vv = window.visualViewport;
-    let line = `[${label}]`;
-    if (vv) line += ` vv:h${vv.height.toFixed(0)}/t${vv.offsetTop.toFixed(0)}`;
+    const entryLines = [`[${label}]`];
+    if (vv) entryLines.push(`vv:h${vv.height.toFixed(0)}/t${vv.offsetTop.toFixed(0)}`);
     if (zoomControls) {
       const r = zoomControls.getBoundingClientRect();
       const cs = window.getComputedStyle(zoomControls);
@@ -60,19 +61,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const cy = r.top + r.height / 2;
       const atPoint = document.elementFromPoint(cx, cy);
       const atPointDesc = atPoint
-        ? `${atPoint.tagName.toLowerCase()}${atPoint.id ? "#" + atPoint.id : ""}`
-        : "none";
-      line += ` rect:${r.top.toFixed(0)}-${r.bottom.toFixed(0)}`;
-      line += ` css:top=${cs.top},disp=${cs.display},vis=${cs.visibility},op=${cs.opacity},z=${cs.zIndex},pe=${cs.pointerEvents}`;
-      line += ` atCenter:${atPointDesc}`;
+        ? `${atPoint.tagName.toLowerCase()}${atPoint.id ? "#" + atPoint.id : ""}${atPoint.className ? "." + String(atPoint.className).slice(0, 15) : ""}`
+        : "NONE(offscreen)";
+      entryLines.push(`rect:${r.top.toFixed(0)}-${r.bottom.toFixed(0)} disp:${cs.display} vis:${cs.visibility}`);
+      entryLines.push(`op:${cs.opacity} z:${cs.zIndex} pe:${cs.pointerEvents}`);
+      entryLines.push(`>> atCenter: ${atPointDesc}`);
     } else {
-      line += ` zoomControls NOT FOUND IN DOM`;
+      entryLines.push(`zoomControls NOT FOUND IN DOM`);
     }
-    const lines = (panel.dataset.lines ? panel.dataset.lines.split("\n") : []);
-    lines.push(line);
-    while (lines.length > 8) lines.shift();
-    panel.dataset.lines = lines.join("\n");
-    panel.textContent = lines.join("\n");
+    const prevEntries = panel.dataset.entries ? JSON.parse(panel.dataset.entries) : [];
+    prevEntries.push(entryLines.join("\n"));
+    while (prevEntries.length > 6) prevEntries.shift();
+    panel.dataset.entries = JSON.stringify(prevEntries);
+    panel.textContent = prevEntries.join("\n---\n");
+    panel.scrollTop = panel.scrollHeight;
   }
   window.zcDebugLog = zcDebugLog;
 
@@ -92,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomControls.style.setProperty("top", `${top}px`, "important");
       zoomControls.style.setProperty("bottom", "auto", "important");
 
-      zcDebugLog(`updateOffset ch:${controlsHeight} top:${top.toFixed(0)}`);
+      zcDebugLog(`updateOffset top:${top.toFixed(0)}`);
     }
 
     window.visualViewport.addEventListener("resize", updateOffset);
