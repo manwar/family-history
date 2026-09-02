@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const zoomControls = document.querySelector(".zoom-controls");
     const vv = window.visualViewport;
     const entryLines = [`[${label}]`];
-    if (vv) entryLines.push(`vv:h${vv.height.toFixed(0)}/t${vv.offsetTop.toFixed(0)}`);
+    if (vv) entryLines.push(`vv:h${vv.height.toFixed(0)}/t${vv.offsetTop.toFixed(0)} w${vv.width.toFixed(0)}/l${vv.offsetLeft.toFixed(0)} scale:${vv.scale.toFixed(2)}`);
     if (zoomControls) {
       const r = zoomControls.getBoundingClientRect();
       const cs = window.getComputedStyle(zoomControls);
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const atPointDesc = atPoint
         ? `${atPoint.tagName.toLowerCase()}${atPoint.id ? "#" + atPoint.id : ""}${atPoint.className ? "." + String(atPoint.className).slice(0, 15) : ""}`
         : "NONE(offscreen)";
-      entryLines.push(`rect:${r.top.toFixed(0)}-${r.bottom.toFixed(0)} disp:${cs.display} vis:${cs.visibility}`);
+      entryLines.push(`rect:y${r.top.toFixed(0)}-${r.bottom.toFixed(0)} x${r.left.toFixed(0)}-${r.right.toFixed(0)} disp:${cs.display} vis:${cs.visibility}`);
       entryLines.push(`op:${cs.opacity} z:${cs.zIndex} pe:${cs.pointerEvents}`);
       entryLines.push(`>> atCenter: ${atPointDesc}`);
     } else {
