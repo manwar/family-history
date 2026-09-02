@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
       panel.style.cssText = "position:fixed;top:4px;left:4px;right:4px;z-index:2147483647;" +
         "background:rgba(0,0,0,0.92);color:#0f0;font:8px monospace;" +
         "padding:4px 6px;border-radius:4px;white-space:pre-wrap;word-break:break-all;" +
-        "max-height:26vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;" +
+        "max-height:16vh;overflow:hidden;pointer-events:none;" +
         "border:1px solid #0f0;";
       document.body.appendChild(panel);
     }
@@ -71,10 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const prevEntries = panel.dataset.entries ? JSON.parse(panel.dataset.entries) : [];
     prevEntries.push(entryLines.join("\n"));
-    while (prevEntries.length > 3) prevEntries.shift();
+    while (prevEntries.length > 1) prevEntries.shift();
     panel.dataset.entries = JSON.stringify(prevEntries);
     panel.textContent = prevEntries.join("\n---\n");
-    panel.scrollTop = panel.scrollHeight;
   }
   window.zcDebugLog = zcDebugLog;
 
