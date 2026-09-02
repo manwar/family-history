@@ -43,26 +43,34 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!panel) {
       panel = document.createElement("div");
       panel.id = "zc-debug";
-      panel.style.cssText = "position:fixed;top:4px;left:4px;z-index:2147483647;" +
-        "background:rgba(0,0,0,0.85);color:#0f0;font:9px monospace;" +
-        "padding:6px 8px;border-radius:4px;white-space:pre;pointer-events:none;" +
-        "max-width:96vw;max-height:60vh;overflow:hidden;";
+      panel.style.cssText = "position:fixed;top:4px;left:4px;right:4px;z-index:2147483647;" +
+        "background:rgba(0,0,0,0.9);color:#0f0;font:9px monospace;" +
+        "padding:6px 8px;border-radius:4px;white-space:pre-wrap;word-break:break-all;" +
+        "pointer-events:none;max-height:55vh;overflow-y:auto;";
       document.body.appendChild(panel);
     }
     const zoomControls = document.querySelector(".zoom-controls");
     const vv = window.visualViewport;
-    let line = `[${label}] `;
-    if (vv) line += `vv.h:${vv.height.toFixed(0)} vv.top:${vv.offsetTop.toFixed(0)} `;
+    let line = `[${label}]`;
+    if (vv) line += ` vv:h${vv.height.toFixed(0)}/t${vv.offsetTop.toFixed(0)}`;
     if (zoomControls) {
       const r = zoomControls.getBoundingClientRect();
       const cs = window.getComputedStyle(zoomControls);
-      line += `rect:t${r.top.toFixed(0)}/b${r.bottom.toFixed(0)} css-top:${cs.top} disp:${cs.display} vis:${cs.visibility}`;
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const atPoint = document.elementFromPoint(cx, cy);
+      const atPointDesc = atPoint
+        ? `${atPoint.tagName.toLowerCase()}${atPoint.id ? "#" + atPoint.id : ""}`
+        : "none";
+      line += ` rect:${r.top.toFixed(0)}-${r.bottom.toFixed(0)}`;
+      line += ` css:top=${cs.top},disp=${cs.display},vis=${cs.visibility},op=${cs.opacity},z=${cs.zIndex},pe=${cs.pointerEvents}`;
+      line += ` atCenter:${atPointDesc}`;
     } else {
-      line += `zoomControls NOT FOUND IN DOM`;
+      line += ` zoomControls NOT FOUND IN DOM`;
     }
     const lines = (panel.dataset.lines ? panel.dataset.lines.split("\n") : []);
     lines.push(line);
-    while (lines.length > 14) lines.shift();
+    while (lines.length > 8) lines.shift();
     panel.dataset.lines = lines.join("\n");
     panel.textContent = lines.join("\n");
   }
