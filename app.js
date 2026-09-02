@@ -48,8 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomControls.style.setProperty("position", "fixed", "important");
       zoomControls.style.setProperty("top", `${top}px`, "important");
       zoomControls.style.setProperty("bottom", "auto", "important");
-
-      updateDebugReadout(vv, controlsHeight, top);
     }
 
     window.visualViewport.addEventListener("resize", updateOffset);
@@ -57,50 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("orientationchange", updateOffset);
     requestAnimationFrame(updateOffset);
   })();
-
-  // TEMPORARY -- remove once the zoom-controls positioning is confirmed
-  // fixed. Shows the live numbers the fix above is actually using, plus
-  // the element's REAL rendered position/style, so a screenshot from a
-  // real device gives real data instead of guesswork.
-  function updateDebugReadout(vv, controlsHeight, top) {
-    const zoomControls = document.querySelector(".zoom-controls");
-    let el = document.getElementById("vv-debug");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "vv-debug";
-      el.style.cssText = "position:fixed;top:4px;left:4px;z-index:2147483647;" +
-        "background:rgba(0,0,0,0.85);color:#0f0;font:10px monospace;" +
-        "padding:6px 8px;border-radius:4px;white-space:pre;pointer-events:none;" +
-        "max-width:96vw;";
-      document.body.appendChild(el);
-    }
-
-    const rect = zoomControls.getBoundingClientRect();
-    const cs = window.getComputedStyle(zoomControls);
-
-    // What element does the browser think is actually at that screen
-    // point right now? If it's not one of the zoom-control buttons,
-    // something else is covering them.
-    const probeX = rect.left + rect.width / 2;
-    const probeY = rect.top + rect.height / 2;
-    const elementAtPoint = document.elementFromPoint(probeX, probeY);
-    const coveredBy = elementAtPoint
-      ? `${elementAtPoint.tagName.toLowerCase()}${elementAtPoint.id ? "#" + elementAtPoint.id : ""}${elementAtPoint.className ? "." + String(elementAtPoint.className).replace(/\s+/g, ".") : ""}`
-      : "(nothing / out of viewport)";
-
-    el.textContent =
-      `-- inputs --\n` +
-      `innerHeight: ${window.innerHeight}  vv.height: ${vv.height.toFixed(1)}  vv.offsetTop: ${vv.offsetTop.toFixed(1)}\n` +
-      `controlsHeight: ${controlsHeight}  computed top: ${top.toFixed(1)}\n` +
-      `-- actual rendered box (getBoundingClientRect) --\n` +
-      `top:${rect.top.toFixed(1)} right:${rect.right.toFixed(1)} bottom:${rect.bottom.toFixed(1)} left:${rect.left.toFixed(1)} w:${rect.width.toFixed(1)} h:${rect.height.toFixed(1)}\n` +
-      `-- computed style --\n` +
-      `display:${cs.display} visibility:${cs.visibility} opacity:${cs.opacity} z-index:${cs.zIndex} position:${cs.position}\n` +
-      `-- what's actually at its center point --\n` +
-      `${coveredBy}`;
-  }
-
-
 
   const defs = svg.append("defs");
 
