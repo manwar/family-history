@@ -44,9 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
       panel = document.createElement("div");
       panel.id = "zc-debug";
       panel.style.cssText = "position:fixed;top:4px;left:4px;right:4px;z-index:2147483647;" +
-        "background:rgba(0,0,0,0.92);color:#0f0;font:9px monospace;" +
-        "padding:6px 8px;border-radius:4px;white-space:pre-wrap;word-break:break-all;" +
-        "max-height:70vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;" +
+        "background:rgba(0,0,0,0.92);color:#0f0;font:8px monospace;" +
+        "padding:4px 6px;border-radius:4px;white-space:pre-wrap;word-break:break-all;" +
+        "max-height:26vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;" +
         "border:1px solid #0f0;";
       document.body.appendChild(panel);
     }
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const prevEntries = panel.dataset.entries ? JSON.parse(panel.dataset.entries) : [];
     prevEntries.push(entryLines.join("\n"));
-    while (prevEntries.length > 6) prevEntries.shift();
+    while (prevEntries.length > 3) prevEntries.shift();
     panel.dataset.entries = JSON.stringify(prevEntries);
     panel.textContent = prevEntries.join("\n---\n");
     panel.scrollTop = panel.scrollHeight;
@@ -83,8 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!zoomControls || !window.visualViewport) return;
 
     const gap = 24; // desired gap above the visible bottom edge
+    let settleTimer1 = null;
+    let settleTimer2 = null;
 
-    function updateOffset() {
+    function applyOffset(label) {
       const vv = window.visualViewport;
       const controlsHeight = zoomControls.offsetHeight || 150;
       const visibleBottomEdge = vv.offsetTop + vv.height;
@@ -94,7 +96,25 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomControls.style.setProperty("top", `${top}px`, "important");
       zoomControls.style.setProperty("bottom", "auto", "important");
 
-      zcDebugLog(`updateOffset top:${top.toFixed(0)}`);
+      zcDebugLog(`${label} top:${top.toFixed(0)}`);
+    }
+
+    function updateOffset() {
+      // Immediate, optimistic update for responsiveness.
+      applyOffset("updateOffset(immediate)");
+
+      // iOS animates browser-chrome/keyboard transitions over several
+      // hundred ms and can fire 'resize'/'scroll' mid-transition, so a
+      // position computed from the very first event in a burst may be
+      // based on a viewport size that hasn't settled yet (confirmed via
+      // the debug log: rect looked in-bounds by our own math, but
+      // elementFromPoint at that exact point found nothing on-screen).
+      // Re-run using a fresh reading shortly after the last event in the
+      // burst, and once more a bit later to catch slower transitions.
+      clearTimeout(settleTimer1);
+      clearTimeout(settleTimer2);
+      settleTimer1 = setTimeout(() => applyOffset("updateOffset(+180ms settle)"), 180);
+      settleTimer2 = setTimeout(() => applyOffset("updateOffset(+500ms settle)"), 500);
     }
 
     window.visualViewport.addEventListener("resize", updateOffset);
